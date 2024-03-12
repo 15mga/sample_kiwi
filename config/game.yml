@@ -1,0 +1,63 @@
+ver: 0.0.1
+mode: prod
+log:
+  std:
+    enable: true
+    log:
+      - warn
+      - error
+      - fatal
+    trace:
+      - info
+      - warn
+      - error
+      - fatal
+  mgo:
+    enable: true
+    log:
+      - info
+      - warn
+      - error
+      - fatal
+    trace:
+      - info
+      - warn
+      - error
+      - fatal
+#    uri: mongodb://root:bt_mongodb@192.168.3.35:27277
+    uri: mongodb://root:123456@127.0.0.1:27017
+    db: demo_log
+    ttl: 604800 #7天
+  exclude:
+    gate:
+      - 101 # IdNtcPus
+      - 102 # AddrNtcPus
+      - 103 # MultiIdNtcPus
+      - 104 # MultiAddrNtcPus
+      - 107 # AllNtcPus
+    scene:
+      - 2 # SceneMovementReq
+      - 6 # SceneEventNtc
+node:
+  ip: ""
+  port: 0
+etcd:
+  endpoints:
+    - 127.0.0.1:2379
+  dialTimeout: 5s
+redis:
+  addr: 127.0.0.1:6379
+  user: ""
+  password: ""
+  db: 0
+mongo:
+  uri: mongodb://root:123456@127.0.0.1:27017
+  db: demo
+gate:
+  deadline: 30
+  packetLimit: 3
+  errLimit: 10
+  tickSecs: 5
+  connCap: 4096
+  ip: ""
+  web: 7737

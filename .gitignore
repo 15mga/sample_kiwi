@@ -1,0 +1,8 @@
+bin
+log
+go.sum
+proto/pb
+.idea
+config/*_local.yml
+.DS_Store
+*/.DS_Store
