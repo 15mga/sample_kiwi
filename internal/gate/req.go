@@ -162,6 +162,7 @@ func (s *Svc) OnGateAddrUpdate(pkt kiwi.IRcvRequest, req *pb.GateAddrUpdateReq, 
 		err := kiwi.Packer().UnpackM(req.Head, head)
 		if err != nil {
 			kiwi.TE(pkt.Tid(), err)
+			pkt.Fail(err.Code())
 			return
 		}
 	}
@@ -170,6 +171,7 @@ func (s *Svc) OnGateAddrUpdate(pkt kiwi.IRcvRequest, req *pb.GateAddrUpdateReq, 
 		err := kiwi.Packer().UnpackM(req.Cache, cache)
 		if err != nil {
 			kiwi.TE(pkt.Tid(), err)
+			pkt.Fail(err.Code())
 			return
 		}
 	}

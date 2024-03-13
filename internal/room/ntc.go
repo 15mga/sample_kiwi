@@ -5,6 +5,7 @@ import (
 	"game/internal/common"
 	"game/proto/pb"
 	"github.com/15mga/kiwi"
+	"github.com/15mga/kiwi/core"
 	"github.com/15mga/kiwi/util"
 	"github.com/15mga/kiwi/util/mgo"
 	"go.mongodb.org/mongo-driver/bson"
@@ -91,6 +92,7 @@ func (s *Svc) OnPlayerOfflineNtc(pkt kiwi.IRcvNotice, ntc *pb.PlayerOfflineNtc) 
 		bson.D{
 			{Players, 1},
 			{OwnerId, 1},
+			{Status, 1},
 		}))
 	if e != nil {
 		return
@@ -111,6 +113,17 @@ func (s *Svc) OnPlayerOfflineNtc(pkt kiwi.IRcvNotice, ntc *pb.PlayerOfflineNtc) 
 		_, _ = mgo.DelOne(SchemaRoom, bson.D{
 			{Id, roomId},
 		})
+		if room.Status == pb.RoomStatus_InScene {
+			core.AsyncReq(pkt.Tid(), nil,
+				&pb.DisposeSceneReq{
+					SceneId: roomId,
+				},
+				func(tid int64, m util.M, code uint16) {
+
+				}, func(tid int64, m util.M, res util.IMsg) {
+
+				})
+		}
 		return
 	}
 

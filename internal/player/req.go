@@ -41,11 +41,20 @@ func (s *Svc) OnPlayer(pkt kiwi.IRcvRequest, req *pb.PlayerReq, res *pb.PlayerRe
 
 	if player.Status == pb.PlayerStatus_Online {
 		//给老连接推送重复登录
-		common.ReqGateNodeToAddr(pkt.Tid(), player.LastGateNode, player.LastAddr, &pb.PlayerRepeatNtc{}, nil, nil)
+		common.ReqGateNodeToAddr(pkt.Tid(), player.LastGateNode, player.LastAddr, &pb.PlayerRepeatNtc{},
+			func(tid int64, m util.M, code uint16) {
+
+			}, func(tid int64, m util.M, msg util.IMsg) {
+
+			})
 		//关闭老链接
 		core.AsyncReqNode(pkt.Tid(), player.LastGateNode, nil, &pb.GateCloseAddrReq{
 			Addr: player.LastAddr,
-		}, nil, nil)
+		}, func(tid int64, m util.M, code uint16) {
+
+		}, func(tid int64, m util.M, msg util.IMsg) {
+
+		})
 	}
 
 	common.ReqGateAddrUpdate(pkt.Tid(), pkt.SenderId(), addr, util.M{
@@ -270,11 +279,10 @@ func (s *Svc) OnPlayerDisconnect(pkt kiwi.IRcvRequest, req *pb.PlayerDisconnectR
 	_IdToOfflineTimer.Set(id, time.AfterFunc(time.Second*5, func() {
 		core.ActivePrcReq[*pb.PlayerDisconnectReq, *pb.PlayerDisconnectRes](pkt, id,
 			func(pkt kiwi.IRcvRequest, req *pb.PlayerDisconnectReq, res *pb.PlayerDisconnectRes) {
-				_, e := mgo.DelOne(SchemaReconnect, bson.M{
+				r, e := mgo.DelOne(SchemaReconnect, bson.M{
 					ReconnectId: id,
 				})
-				if e != nil {
-					kiwi.TE3(pkt.Tid(), util.EcDbErr, e)
+				if e != nil || r.DeletedCount == 0 {
 					return
 				}
 				updateResult, e := mgo.UpdateOne(SchemaPlayer, bson.M{

@@ -28,7 +28,7 @@ func (s *Svc) OnRoomNew(pkt kiwi.IRcvRequest, req *pb.RoomNewReq, res *pb.RoomNe
 		SceneTplId:  req.SceneTplId,
 		Password:    req.Password,
 		OwnerId:     pkt.HeadId(),
-		Status:      pb.RoomStatus_Lobby,
+		Status:      pb.RoomStatus_InLobby,
 		MaxPlayers:  req.MaxPlayers,
 		CurrPlayers: 1,
 		CreateTime:  time.Now().Unix(),
@@ -153,7 +153,7 @@ func (s *Svc) OnRoomEntry(pkt kiwi.IRcvRequest, req *pb.RoomEntryReq, res *pb.Ro
 			pkt.Fail(util.EcDbErr)
 			return
 		}
-		if room.Status != pb.RoomStatus_Lobby {
+		if room.Status != pb.RoomStatus_InLobby {
 			pkt.Fail(EcRoomEntry_CurrStatusCanNotEntry)
 			return
 		}
@@ -352,7 +352,9 @@ func (s *Svc) OnRoomStart(pkt kiwi.IRcvRequest, req *pb.RoomStartReq, res *pb.Ro
 		{Id, roomId},
 		{OwnerId, pkt.HeadId()},
 	}, bson.M{
-		"$set": bson.D{},
+		"$set": bson.D{
+			{Status, pb.RoomStatus_InScene},
+		},
 	}, &room)
 	if err != nil {
 		pkt.Fail(EcRoomStart_NotExistRoomOrNotOwner)
