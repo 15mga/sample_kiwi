@@ -4,11 +4,13 @@ go 1.21
 
 require (
 	github.com/15mga/kiwi v0.0.1
+	github.com/15mga/kiwi_tool v0.0.0-20240313121430-2bb5f80fa9cc
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/orcaman/concurrent-map/v2 v2.0.1
 	github.com/stretchr/testify v1.8.4
 	go.etcd.io/etcd/client/v3 v3.5.4
 	go.mongodb.org/mongo-driver v1.13.1
+	google.golang.org/protobuf v1.32.0
 )
 
 require (
@@ -81,7 +83,6 @@ require (
 	golang.org/x/tools v0.12.0 // indirect
 	google.golang.org/genproto v0.0.0-20220519153652-3a47de7e79bd // indirect
 	google.golang.org/grpc v1.46.2 // indirect
-	google.golang.org/protobuf v1.32.0 // indirect
 	gopkg.in/ini.v1 v1.66.4 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
