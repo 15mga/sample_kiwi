@@ -2,4 +2,4 @@
 
 cd "$(dirname "$0")" || exit
 
-./build.sh simple/simple linux
+./build.sh main linux
