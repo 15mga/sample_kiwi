@@ -140,60 +140,60 @@ func (s *Svc) OnRoomEntry(pkt kiwi.IRcvRequest, req *pb.RoomEntryReq, res *pb.Ro
 	}, func(tid int64, m util.M, playerRes *pb.PlayerIdRes) {
 		var room pb.Room
 		seat := int32(-1)
-		err := mgo.Tx(nil, nil, func() *util.Err {
-			e := mgo.FindOne(SchemaRoom, bson.D{
-				{Id, req.RoomId},
-			}, &room, options.FindOne().SetProjection(bson.D{
-				{CreateTime, 0},
-			}))
-			if e != nil {
-				if errors.Is(e, mongo.ErrNoDocuments) {
-					return util.WrapErr(EcRoomEntry_NotExistRoomId, e)
-				}
-				return util.WrapErr(util.EcDbErr, e)
+		e := mgo.FindOne(SchemaRoom, bson.D{
+			{Id, req.RoomId},
+		}, &room, options.FindOne().SetProjection(bson.D{
+			{CreateTime, 0},
+		}))
+		if e != nil {
+			if errors.Is(e, mongo.ErrNoDocuments) {
+				pkt.Fail(EcRoomEntry_NotExistRoomId)
+				return
 			}
-			if room.Status != pb.RoomStatus_Lobby {
-				return util.NewErr(EcRoomEntry_CurrStatusCanNotEntry, nil)
-			}
-			if room.CurrPlayers == room.MaxPlayers {
-				return util.NewErr(EcRoomEntry_RoomFull, nil)
-			}
-			seatMap := make(map[int32]struct{})
-			for _, p := range room.Players {
-				seatMap[p.Seat] = struct{}{}
-			}
-
-			for i := int32(0); i < room.MaxPlayers; i++ {
-				if _, ok := seatMap[i]; !ok {
-					seat = i
-					break
-				}
-			}
-			_, e = mgo.UpdateOne(SchemaRoom, bson.D{
-				{Id, req.RoomId},
-			}, bson.M{
-				"$inc": bson.M{CurrPlayers: 1},
-				"$set": bson.M{
-					fmt.Sprintf("%s.%s", Players, pkt.HeadId()): &pb.RoomPlayer{
-						Ready:      false,
-						Disconnect: false,
-						EnterTs:    time.Now().Unix(),
-						Seat:       seat,
-					},
-				},
-			})
-			if e != nil {
-				if errors.Is(e, mongo.ErrNoDocuments) {
-					return util.WrapErr(EcRoomEntry_NotExistRoomId, e)
-				}
-				return util.WrapErr(util.EcDbErr, e)
-			}
-			return nil
-		})
-		if err != nil {
-			pkt.Err(err)
+			pkt.Fail(util.EcDbErr)
 			return
 		}
+		if room.Status != pb.RoomStatus_Lobby {
+			pkt.Fail(EcRoomEntry_CurrStatusCanNotEntry)
+			return
+		}
+		if room.CurrPlayers == room.MaxPlayers {
+			pkt.Fail(EcRoomEntry_RoomFull)
+			return
+		}
+		seatMap := make(map[int32]struct{})
+		for _, p := range room.Players {
+			seatMap[p.Seat] = struct{}{}
+		}
+
+		for i := int32(0); i < room.MaxPlayers; i++ {
+			if _, ok := seatMap[i]; !ok {
+				seat = i
+				break
+			}
+		}
+		_, e = mgo.UpdateOne(SchemaRoom, bson.D{
+			{Id, req.RoomId},
+		}, bson.M{
+			"$inc": bson.M{CurrPlayers: 1},
+			"$set": bson.M{
+				fmt.Sprintf("%s.%s", Players, pkt.HeadId()): &pb.RoomPlayer{
+					Ready:      false,
+					Disconnect: false,
+					EnterTs:    time.Now().Unix(),
+					Seat:       seat,
+				},
+			},
+		})
+		if e != nil {
+			if errors.Is(e, mongo.ErrNoDocuments) {
+				pkt.Fail(EcRoomEntry_NotExistRoomId)
+				return
+			}
+			pkt.Fail(util.EcDbErr)
+			return
+		}
+
 		res.Room = &room
 		pkt.Ok(res)
 
@@ -227,57 +227,53 @@ func (s *Svc) OnRoomExit(pkt kiwi.IRcvRequest, req *pb.RoomExitReq, res *pb.Room
 		room  pb.Room
 		empty bool
 	)
-	err := mgo.Tx(nil, nil, func() *util.Err {
-		e := mgo.FindOne(SchemaRoom, bson.D{
+	e := mgo.FindOne(SchemaRoom, bson.D{
+		{Id, roomId},
+	}, &room, options.FindOne().SetProjection(
+		bson.D{
+			{Players, 1},
+		}))
+	if e != nil {
+		if errors.Is(e, mongo.ErrNoDocuments) {
+			pkt.Fail(EcRoomExit_NotExistRoomId)
+			return
+		}
+		pkt.Fail(util.EcDbErr)
+		return
+	}
+	//只有一个玩家，直接销毁房间
+	playerCount := len(room.Players)
+	if playerCount == 1 {
+		empty = true
+		_, e := mgo.DelOne(SchemaRoom, bson.D{
 			{Id, roomId},
-		}, &room, options.FindOne().SetProjection(
-			bson.D{
-				{Players, 1},
-			}))
+		})
 		if e != nil {
-			if errors.Is(e, mongo.ErrNoDocuments) {
-				return util.WrapErr(EcRoomExit_NotExistRoomId, e)
-			}
-			return util.WrapErr(util.EcDbErr, e)
+			pkt.Fail(util.EcDbErr)
+			return
 		}
-		//只有一个玩家，直接销毁房间
-		playerCount := len(room.Players)
-		if playerCount == 1 {
-			empty = true
-			_, e := mgo.DelOne(SchemaRoom, bson.D{
-				{Id, roomId},
-			})
-			if e != nil {
-				return util.WrapErr(util.EcDbErr, e)
-			}
-			return nil
-		}
+	}
 
-		//移除玩家的房间数据
-		update := bson.M{
-			"$inc": bson.M{
-				CurrPlayers: -1,
-			},
-			"$unset": bson.M{
-				fmt.Sprintf("%s.%s", Players, pkt.HeadId()): "",
-			},
+	//移除玩家的房间数据
+	update := bson.M{
+		"$inc": bson.M{
+			CurrPlayers: -1,
+		},
+		"$unset": bson.M{
+			fmt.Sprintf("%s.%s", Players, pkt.HeadId()): "",
+		},
+	}
+	if room.OwnerId == pkt.HeadId() {
+		ownerId := getNewOwnerId(&room)
+		update["$set"] = bson.M{
+			OwnerId: ownerId,
 		}
-		if room.OwnerId == pkt.HeadId() {
-			ownerId := getNewOwnerId(&room)
-			update["$set"] = bson.M{
-				OwnerId: ownerId,
-			}
-		}
-		_, e = mgo.UpdateOne(SchemaRoom, bson.D{
-			{Id, roomId},
-		}, update)
-		if e != nil {
-			return util.WrapErr(util.EcDbErr, e)
-		}
-		return nil
-	})
-	if err != nil {
-		pkt.Err(err)
+	}
+	_, e = mgo.UpdateOne(SchemaRoom, bson.D{
+		{Id, roomId},
+	}, update)
+	if e != nil {
+		pkt.Fail(util.EcDbErr)
 		return
 	}
 
@@ -302,43 +298,40 @@ func (s *Svc) OnRoomReady(pkt kiwi.IRcvRequest, req *pb.RoomReadyReq, res *pb.Ro
 		return
 	}
 	var room pb.Room
-	err := mgo.Tx(nil, nil, func() *util.Err {
-		e := mgo.FindOne(SchemaRoom, bson.D{
-			{Id, roomId},
-		}, &room, options.FindOne().SetProjection(bson.D{
-			{Players, 1},
-		}))
-		if e != nil {
-			if errors.Is(e, mongo.ErrNoDocuments) {
-				return util.WrapErr(EcRoomReady_NotExistRoomId, e)
-			}
-			return util.WrapErr(util.EcDbErr, e)
+	e := mgo.FindOne(SchemaRoom, bson.D{
+		{Id, roomId},
+	}, &room, options.FindOne().SetProjection(bson.D{
+		{Players, 1},
+	}))
+	if e != nil {
+		if errors.Is(e, mongo.ErrNoDocuments) {
+			pkt.Fail(EcRoomReady_NotExistRoomId)
+			return
 		}
-		pid := pkt.HeadId()
-		ok := false
-		for playerId := range room.Players {
-			if playerId == pid {
-				ok = true
-				break
-			}
+		pkt.Fail(util.EcDbErr)
+		return
+	}
+	pid := pkt.HeadId()
+	ok = false
+	for playerId := range room.Players {
+		if playerId == pid {
+			ok = true
+			break
 		}
-		if !ok {
-			return util.NewErr(EcRoomReady_NotEntryRoom, nil)
-		}
-		_, e = mgo.UpdateOne(SchemaRoom, bson.D{
-			{Id, roomId},
-		}, bson.M{
-			"$set": bson.M{
-				fmt.Sprintf("%s.%s.%s", Players, pid, RoomPlayerReady): req.IsReady,
-			},
-		})
-		if e != nil {
-			return util.WrapErr(util.EcDbErr, e)
-		}
-		return nil
+	}
+	if !ok {
+		pkt.Fail(EcRoomReady_NotEntryRoom)
+		return
+	}
+	_, e = mgo.UpdateOne(SchemaRoom, bson.D{
+		{Id, roomId},
+	}, bson.M{
+		"$set": bson.M{
+			fmt.Sprintf("%s.%s.%s", Players, pid, RoomPlayerReady): req.IsReady,
+		},
 	})
-	if err != nil {
-		pkt.Err(err)
+	if e != nil {
+		pkt.Fail(util.EcDbErr)
 		return
 	}
 	pkt.Ok(res)
@@ -448,47 +441,41 @@ func (s *Svc) OnRoomReconnect(pkt kiwi.IRcvRequest, req *pb.RoomReconnectReq, re
 	}
 
 	var room pb.Room
-	err := mgo.Tx(nil, nil, func() *util.Err {
-		e := mgo.FindOne(SchemaRoom, bson.D{
-			{Id, roomId},
-		}, &room, options.FindOne().SetProjection(bson.D{
-			{CreateTime, 0},
-		}))
-		if e != nil {
-			if errors.Is(e, mongo.ErrNoDocuments) {
-				return util.WrapErr(EcRoomReconnect_NotExistRoomId, e)
-			}
-			return util.WrapErr(util.EcDbErr, e)
+	e := mgo.FindOne(SchemaRoom, bson.D{
+		{Id, roomId},
+	}, &room, options.FindOne().SetProjection(bson.D{
+		{CreateTime, 0},
+	}))
+	if e != nil {
+		if errors.Is(e, mongo.ErrNoDocuments) {
+			pkt.Fail(EcRoomReconnect_NotExistRoomId)
+			return
 		}
-		playerId := pkt.HeadId()
-		ok = false
-		for id := range room.Players {
-			if id == playerId {
-				ok = true
-				break
-			}
+		pkt.Fail(util.EcDbErr)
+		return
+	}
+	playerId := pkt.HeadId()
+	ok = false
+	for id := range room.Players {
+		if id == playerId {
+			ok = true
+			break
 		}
-		if !ok {
-			return util.NewErr(EcRoomReconnect_KickOut, nil)
-		}
-		key := fmt.Sprintf("%s.%s.%s", Players, playerId, RoomPlayerDisconnect)
-		_, e = mgo.UpdateOne(SchemaRoom, bson.D{
-			{Id, roomId},
-		}, bson.M{
-			"$set": bson.M{
-				key: false,
-			},
-		})
-		if e != nil {
-			if errors.Is(e, mongo.ErrNoDocuments) {
-				return nil
-			}
-			return util.WrapErr(util.EcDbErr, e)
-		}
-		return nil
+	}
+	if !ok {
+		pkt.Fail(EcRoomReconnect_KickOut)
+		return
+	}
+	key := fmt.Sprintf("%s.%s.%s", Players, playerId, RoomPlayerDisconnect)
+	_, e = mgo.UpdateOne(SchemaRoom, bson.D{
+		{Id, roomId},
+	}, bson.M{
+		"$set": bson.M{
+			key: false,
+		},
 	})
-	if err != nil {
-		kiwi.TE(pkt.Tid(), err)
+	if e != nil && !errors.Is(e, mongo.ErrNoDocuments) {
+		pkt.Fail(util.EcDbErr)
 		return
 	}
 	res.Room = &room

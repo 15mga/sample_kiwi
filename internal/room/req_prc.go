@@ -10,7 +10,7 @@ import (
 	"github.com/15mga/kiwi/util"
 )
 
-func (s *svc) registerPusAndReq() {
+func (s *svc) registerReq() {
 	kiwi.Router().BindReq(common.Room, RoomNewReq, func(req kiwi.IRcvRequest) {
 		core.GoPrcReq[*pb.RoomNewReq](req, _svc.OnRoomNew)
 	})

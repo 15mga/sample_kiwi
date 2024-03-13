@@ -21,8 +21,6 @@ const (
 	EcSceneBehaviour_NoTarget = 4
 	//没有进入场景
 	EcSceneRobotAdd_NotEntry = 1
-	//机器人已达上限
-	EcSceneRobotAdd_TooManyRobot = 2
 	//没有进入场景
 	EcSceneRobotClear_NotEntry = 1
 	//场景不存在

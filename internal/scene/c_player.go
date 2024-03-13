@@ -45,6 +45,11 @@ func (c *CPlayer) ProcessEvents(event *CEvent) {
 	//	"curr tile": tnf.CurrTile,
 	//	"events":    event.Data,
 	//})
-	common.ReqGateNodeToAddr(0, c.gateNodeId, c.gateAgentAddr, event.Data)
+	common.ReqGateNodeToAddr(0, c.gateNodeId, c.gateAgentAddr, event.Data,
+		func(tid int64, m util.M, code uint16) {
+
+		}, func(tid int64, m util.M, msg util.IMsg) {
+
+		})
 	//c.frame.PutJob(JobSendNtc, c.gateNodeId, c.gateAgentAddr, event.Data)
 }

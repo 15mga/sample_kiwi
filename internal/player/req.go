@@ -41,11 +41,11 @@ func (s *Svc) OnPlayer(pkt kiwi.IRcvRequest, req *pb.PlayerReq, res *pb.PlayerRe
 
 	if player.Status == pb.PlayerStatus_Online {
 		//给老连接推送重复登录
-		common.ReqGateNodeToAddr(pkt.Tid(), player.LastGateNode, player.LastAddr, &pb.PlayerRepeatNtc{})
+		common.ReqGateNodeToAddr(pkt.Tid(), player.LastGateNode, player.LastAddr, &pb.PlayerRepeatNtc{}, nil, nil)
 		//关闭老链接
-		_ = core.PusNode(pkt.Tid(), player.LastGateNode, nil, &pb.GateCloseAddrPus{
+		core.AsyncReqNode(pkt.Tid(), player.LastGateNode, nil, &pb.GateCloseAddrReq{
 			Addr: player.LastAddr,
-		})
+		}, nil, nil)
 	}
 
 	common.ReqGateAddrUpdate(pkt.Tid(), pkt.SenderId(), addr, util.M{

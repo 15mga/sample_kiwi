@@ -36,6 +36,14 @@ func (s *svc) OnGateSendToAll(pkt kiwi.IRcvRequest, req *pb.GateSendToAllReq, re
 	pkt.Err2(util.EcNotImplement, util.M{"req": req})
 }
 
+func (s *svc) OnGateCloseId(pkt kiwi.IRcvRequest, req *pb.GateCloseIdReq, res *pb.GateCloseIdRes) {
+	pkt.Err2(util.EcNotImplement, util.M{"req": req})
+}
+
+func (s *svc) OnGateCloseAddr(pkt kiwi.IRcvRequest, req *pb.GateCloseAddrReq, res *pb.GateCloseAddrRes) {
+	pkt.Err2(util.EcNotImplement, util.M{"req": req})
+}
+
 func (s *svc) OnGateUpdate(pkt kiwi.IRcvRequest, req *pb.GateUpdateReq, res *pb.GateUpdateRes) {
 	pkt.Err2(util.EcNotImplement, util.M{"req": req})
 }

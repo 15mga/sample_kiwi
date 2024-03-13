@@ -7,41 +7,41 @@ import (
 )
 
 const (
-	Chat   kiwi.TSvc = 0
 	Gate   kiwi.TSvc = 2
 	User   kiwi.TSvc = 3
 	Player kiwi.TSvc = 4
 	Room   kiwi.TSvc = 5
 	Scene  kiwi.TSvc = 7
 	Team   kiwi.TSvc = 8
+	Chat   kiwi.TSvc = 9
 )
 
 const (
-	SChat   = "chat"
 	SGate   = "gate"
 	SUser   = "user"
 	SPlayer = "player"
 	SRoom   = "room"
 	SScene  = "scene"
 	STeam   = "team"
+	SChat   = "chat"
 )
 
 var SvcToName = map[kiwi.TSvc]string{
-	Chat:   SChat,
 	Gate:   SGate,
 	User:   SUser,
 	Player: SPlayer,
 	Room:   SRoom,
 	Scene:  SScene,
 	Team:   STeam,
+	Chat:   SChat,
 }
 
 var NameToSvc = map[string]kiwi.TSvc{
-	SChat:   Chat,
 	SGate:   Gate,
 	SUser:   User,
 	SPlayer: Player,
 	SRoom:   Room,
 	SScene:  Scene,
 	STeam:   Team,
+	SChat:   Chat,
 }

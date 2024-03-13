@@ -70,10 +70,10 @@ func (s *SRobot) OnUpdate() {
 }
 
 func (s *SRobot) onRobotAdd(data []any) {
-	_, count, handler := util.SplitSlc3[int64, int32, func(uint162 uint16)](data)
+	_, count, handler := util.SplitSlc3[int64, int32, func(int32)](data)
 	m := s.maxRobot - s.currRobot
 	if m == 0 {
-		handler(EcSceneRobotAdd_TooManyRobot)
+		handler(s.currRobot)
 		return
 	}
 	if count > m {
@@ -106,7 +106,7 @@ func (s *SRobot) onRobotAdd(data []any) {
 		_ = s.Scene().AddEntity(e)
 		s.Scene().TagComponent(tnf, TagCompSceneEntry)
 	}
-	handler(0)
+	handler(s.currRobot)
 }
 
 func (s *SRobot) onRobotClear(data []any) {
@@ -119,6 +119,7 @@ func (s *SRobot) onRobotClear(data []any) {
 	for i, component := range components {
 		ids[i] = component.Entity().Id()
 	}
+	s.currRobot = 0
 	s.Frame().PutJob(JobEntityDel, tid, ids)
 }
 

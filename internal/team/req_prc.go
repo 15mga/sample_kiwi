@@ -10,7 +10,7 @@ import (
 	"github.com/15mga/kiwi/util"
 )
 
-func (s *svc) registerPusAndReq() {
+func (s *svc) registerReq() {
 	kiwi.Router().BindReq(common.Team, NewTeamReq, func(req kiwi.IRcvRequest) {
 		key, _ := util.MGet[string](req.Head(), "rid")
 		core.ActivePrcReq[*pb.NewTeamReq](req, key, _svc.OnNewTeam)

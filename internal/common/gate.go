@@ -101,7 +101,8 @@ func ReqGateToId(tid int64, id string, msg util.IMsg) {
 	})
 }
 
-func ReqGateNodeToId(tid, nodeId int64, id string, msg util.IMsg) {
+func ReqGateNodeToId(tid, nodeId int64, id string, msg util.IMsg,
+	onFail util.FnInt64MUint16, onOk util.FnInt64MMsg) {
 	bytes, err := kiwi.Codec().PbMarshal(msg)
 	if err != nil {
 		kiwi.TE(tid, err)
@@ -112,14 +113,11 @@ func ReqGateNodeToId(tid, nodeId int64, id string, msg util.IMsg) {
 		Id:      id,
 		SvcCode: sc,
 		Payload: bytes,
-	}, func(tid int64, m util.M, code uint16) {
-		kiwi.TE2(tid, code, nil)
-	}, func(tid int64, m util.M, msg util.IMsg) {
-
-	})
+	}, onFail, onOk)
 }
 
-func ReqGateNodeToAddr(tid, nodeId int64, addr string, msg util.IMsg) {
+func ReqGateNodeToAddr(tid, nodeId int64, addr string, msg util.IMsg,
+	onFail util.FnInt64MUint16, onOk util.FnInt64MMsg) {
 	bytes, err := kiwi.Codec().PbMarshal(msg)
 	if err != nil {
 		kiwi.TE(tid, err)
@@ -130,11 +128,7 @@ func ReqGateNodeToAddr(tid, nodeId int64, addr string, msg util.IMsg) {
 		Addr:    addr,
 		SvcCode: sc,
 		Payload: bytes,
-	}, func(tid int64, m util.M, code uint16) {
-		kiwi.TE2(tid, code, nil)
-	}, func(tid int64, m util.M, msg util.IMsg) {
-
-	})
+	}, onFail, onOk)
 }
 
 func ReqGateToMultiId(tid int64, id []string, msg util.IMsg) {

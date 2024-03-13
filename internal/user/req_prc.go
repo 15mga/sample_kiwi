@@ -9,7 +9,7 @@ import (
 	"github.com/15mga/kiwi/core"
 )
 
-func (s *svc) registerPusAndReq() {
+func (s *svc) registerReq() {
 	kiwi.Router().BindReq(common.User, SignUpReq, func(req kiwi.IRcvRequest) {
 		core.GoPrcReq[*pb.SignUpReq](req, _svc.OnSignUp)
 	})

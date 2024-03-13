@@ -8,7 +8,7 @@ import (
 	"github.com/15mga/kiwi/core"
 )
 
-func WatchNotice() {
+func (svc *svc) watchNtc() {
 	kiwi.Router().WatchNotice(&pb.PlayerDisconnectNtc{}, func(ntc kiwi.IRcvNotice) {
 		core.SelfPrcNtc[*pb.PlayerDisconnectNtc](ntc, _svc.OnPlayerDisconnectNtc)
 	})

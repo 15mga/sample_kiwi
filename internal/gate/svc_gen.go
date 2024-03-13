@@ -28,7 +28,7 @@ func (s *svc) Svc() kiwi.TSvc {
 
 func (s *svc) Start() {
 	s.bindCodecFac()
-	s.registerPusAndReq()
+	s.registerReq()
 	s.bindReqToRes()
 }
 

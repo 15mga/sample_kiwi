@@ -25,20 +25,22 @@ const (
 	GateSendToMultiAddrRes kiwi.TCode = 109
 	GateSendToAllReq       kiwi.TCode = 110
 	GateSendToAllRes       kiwi.TCode = 111
-	GateCloseIdPus         kiwi.TCode = 112
-	GateCloseAddrPus       kiwi.TCode = 113
-	GateUpdateReq          kiwi.TCode = 114
-	GateUpdateRes          kiwi.TCode = 115
-	GateAddrUpdateReq      kiwi.TCode = 116
-	GateAddrUpdateRes      kiwi.TCode = 117
-	GateRemoveReq          kiwi.TCode = 118
-	GateRemoveRes          kiwi.TCode = 119
-	GateAddrRemoveReq      kiwi.TCode = 120
-	GateAddrRemoveRes      kiwi.TCode = 121
-	GateGetReq             kiwi.TCode = 122
-	GateGetRes             kiwi.TCode = 123
-	GateAddrGetReq         kiwi.TCode = 124
-	GateAddrGetRes         kiwi.TCode = 125
+	GateCloseIdReq         kiwi.TCode = 112
+	GateCloseIdRes         kiwi.TCode = 113
+	GateCloseAddrReq       kiwi.TCode = 114
+	GateCloseAddrRes       kiwi.TCode = 115
+	GateUpdateReq          kiwi.TCode = 116
+	GateUpdateRes          kiwi.TCode = 117
+	GateAddrUpdateReq      kiwi.TCode = 118
+	GateAddrUpdateRes      kiwi.TCode = 119
+	GateRemoveReq          kiwi.TCode = 120
+	GateRemoveRes          kiwi.TCode = 121
+	GateAddrRemoveReq      kiwi.TCode = 122
+	GateAddrRemoveRes      kiwi.TCode = 123
+	GateGetReq             kiwi.TCode = 124
+	GateGetRes             kiwi.TCode = 125
+	GateAddrGetReq         kiwi.TCode = 126
+	GateAddrGetRes         kiwi.TCode = 127
 )
 
 func (svc *svc) bindCodecFac() {
@@ -84,11 +86,17 @@ func (svc *svc) bindCodecFac() {
 	kiwi.Codec().BindFac(common.Gate, GateSendToAllRes, func() util.IMsg {
 		return &pb.GateSendToAllRes{}
 	})
-	kiwi.Codec().BindFac(common.Gate, GateCloseIdPus, func() util.IMsg {
-		return &pb.GateCloseIdPus{}
+	kiwi.Codec().BindFac(common.Gate, GateCloseIdReq, func() util.IMsg {
+		return &pb.GateCloseIdReq{}
 	})
-	kiwi.Codec().BindFac(common.Gate, GateCloseAddrPus, func() util.IMsg {
-		return &pb.GateCloseAddrPus{}
+	kiwi.Codec().BindFac(common.Gate, GateCloseIdRes, func() util.IMsg {
+		return &pb.GateCloseIdRes{}
+	})
+	kiwi.Codec().BindFac(common.Gate, GateCloseAddrReq, func() util.IMsg {
+		return &pb.GateCloseAddrReq{}
+	})
+	kiwi.Codec().BindFac(common.Gate, GateCloseAddrRes, func() util.IMsg {
+		return &pb.GateCloseAddrRes{}
 	})
 	kiwi.Codec().BindFac(common.Gate, GateUpdateReq, func() util.IMsg {
 		return &pb.GateUpdateReq{}

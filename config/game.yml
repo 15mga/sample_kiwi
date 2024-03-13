@@ -24,7 +24,6 @@ log:
       - warn
       - error
       - fatal
-#    uri: mongodb://root:bt_mongodb@192.168.3.35:27277
     uri: mongodb://root:123456@127.0.0.1:27017
     db: demo_log
     ttl: 604800 #7天

@@ -9,7 +9,7 @@ import (
 	"github.com/15mga/kiwi/core"
 )
 
-func (s *svc) registerPusAndReq() {
+func (s *svc) registerReq() {
 	kiwi.Router().BindReq(common.Gate, HeartbeatReq, func(req kiwi.IRcvRequest) {
 		core.SelfPrcReq[*pb.HeartbeatReq](req, _svc.OnHeartbeat)
 	})
@@ -30,6 +30,12 @@ func (s *svc) registerPusAndReq() {
 	})
 	kiwi.Router().BindReq(common.Gate, GateSendToAllReq, func(req kiwi.IRcvRequest) {
 		core.SelfPrcReq[*pb.GateSendToAllReq](req, _svc.OnGateSendToAll)
+	})
+	kiwi.Router().BindReq(common.Gate, GateCloseIdReq, func(req kiwi.IRcvRequest) {
+		core.SelfPrcReq[*pb.GateCloseIdReq](req, _svc.OnGateCloseId)
+	})
+	kiwi.Router().BindReq(common.Gate, GateCloseAddrReq, func(req kiwi.IRcvRequest) {
+		core.SelfPrcReq[*pb.GateCloseAddrReq](req, _svc.OnGateCloseAddr)
 	})
 	kiwi.Router().BindReq(common.Gate, GateUpdateReq, func(req kiwi.IRcvRequest) {
 		core.SelfPrcReq[*pb.GateUpdateReq](req, _svc.OnGateUpdate)

@@ -114,6 +114,16 @@ func (s *Svc) OnGateSendToAll(pkt kiwi.IRcvRequest, req *pb.GateSendToAllReq, re
 	kiwi.Gate().AllSend(pkt.Tid(), bytes)
 }
 
+func (s *Svc) OnGateCloseId(pkt kiwi.IRcvRequest, req *pb.GateCloseIdReq, res *pb.GateCloseIdRes) {
+	kiwi.Gate().CloseWithId(pkt.Tid(), req.Id, nil, []string{"token"})
+	pkt.Ok(res)
+}
+
+func (s *Svc) OnGateCloseAddr(pkt kiwi.IRcvRequest, req *pb.GateCloseAddrReq, res *pb.GateCloseAddrRes) {
+	kiwi.Gate().CloseWithAddr(pkt.Tid(), req.Addr, nil, []string{"token"})
+	pkt.Ok(res)
+}
+
 func (s *Svc) OnGateUpdate(pkt kiwi.IRcvRequest, req *pb.GateUpdateReq, res *pb.GateUpdateRes) {
 	var (
 		head, cache util.M

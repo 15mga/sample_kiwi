@@ -33,7 +33,6 @@ func StrToRole(role string) int64 {
 }
 
 var MsgRole = map[kiwi.TSvcCode][]int64{
-	0:    {RPlayer, RAdmin},
 	2000: {RPlayer, RAdmin},
 	3000: {RGuest},
 	3002: {RGuest},
@@ -59,4 +58,5 @@ var MsgRole = map[kiwi.TSvcCode][]int64{
 	7007: {RPlayer},
 	7009: {RPlayer},
 	8000: {RPlayer},
+	9000: {RPlayer, RAdmin},
 }

@@ -128,11 +128,8 @@ func (s *Svc) OnSceneRobotAdd(pkt kiwi.IRcvRequest, req *pb.SceneRobotAddReq, re
 		pkt.Fail(EcSceneRobotAdd_NotEntry)
 		return
 	}
-	PushJob(sceneId, JobRobotAdd, pkt.Tid(), req.Count, func(code uint16) {
-		if code > 0 {
-			pkt.Fail(code)
-			return
-		}
+	PushJob(sceneId, JobRobotAdd, pkt.Tid(), req.Count, func(count int32) {
+		res.CurrCount = count
 		pkt.Ok(res)
 	})
 }

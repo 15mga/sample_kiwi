@@ -9,7 +9,7 @@ import (
 	"github.com/15mga/kiwi/core"
 )
 
-func (s *svc) registerPusAndReq() {
+func (s *svc) registerReq() {
 	kiwi.Router().BindReq(common.Scene, SceneEntryReq, func(req kiwi.IRcvRequest) {
 		core.SharePrcReq[*pb.SceneEntryReq](req, common.SScene, _svc.OnSceneEntry)
 	})

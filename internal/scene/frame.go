@@ -32,14 +32,14 @@ type Conf struct {
 func getConf(scene *pb.Scene) *Conf {
 	return &Conf{
 		TileSize: 64,
-		Width:    2048,
-		Height:   2048,
+		Width:    1024,
+		Height:   1024,
 		FovLaps:  1,
 	}
 }
 
 const (
-	MaxRobot = 1024 << 6
+	MaxRobot = 1024 << 2
 )
 
 func NewScene(tid int64, scn *pb.Scene) *util.Err {
@@ -55,7 +55,7 @@ func NewScene(tid int64, scn *pb.Scene) *util.Err {
 	frame := ecs.NewFrame(scene, ecs.FrameSystems(
 		NewSRobot(MaxRobot),
 		NewSEntity(),
-		NewSTransform(_TileSize, conf.Width, conf.Height, conf.FovLaps),
+		NewSTransform(conf.TileSize, conf.Width, conf.Height, conf.FovLaps),
 		NewSBehaviour(),
 		NewSEvent(),
 		//NewSNtcSender(),

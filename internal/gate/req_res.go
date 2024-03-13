@@ -16,6 +16,8 @@ func (s *svc) bindReqToRes() {
 	kiwi.Codec().BindReqToRes(common.Gate, GateSendToMultiIdReq, GateSendToMultiIdRes)
 	kiwi.Codec().BindReqToRes(common.Gate, GateSendToMultiAddrReq, GateSendToMultiAddrRes)
 	kiwi.Codec().BindReqToRes(common.Gate, GateSendToAllReq, GateSendToAllRes)
+	kiwi.Codec().BindReqToRes(common.Gate, GateCloseIdReq, GateCloseIdRes)
+	kiwi.Codec().BindReqToRes(common.Gate, GateCloseAddrReq, GateCloseAddrRes)
 	kiwi.Codec().BindReqToRes(common.Gate, GateUpdateReq, GateUpdateRes)
 	kiwi.Codec().BindReqToRes(common.Gate, GateAddrUpdateReq, GateAddrUpdateRes)
 	kiwi.Codec().BindReqToRes(common.Gate, GateRemoveReq, GateRemoveRes)

@@ -9,7 +9,7 @@ import (
 	"github.com/15mga/kiwi/util"
 )
 
-func WatchNotice() {
+func (svc *svc) watchNtc() {
 	kiwi.Router().WatchNotice(&pb.PlayerDisconnectNtc{}, func(ntc kiwi.IRcvNotice) {
 		key, ok := util.MGet[string](ntc.Head(), "sid")
 		if ok {

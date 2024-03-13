@@ -10,7 +10,7 @@ import (
 	"github.com/15mga/kiwi/util"
 )
 
-func (s *svc) registerPusAndReq() {
+func (s *svc) registerReq() {
 	kiwi.Router().BindReq(common.Player, PlayerReq, func(req kiwi.IRcvRequest) {
 		key, _ := util.MGet[string](req.Head(), "pid")
 		core.ActivePrcReq[*pb.PlayerReq](req, key, _svc.OnPlayer)

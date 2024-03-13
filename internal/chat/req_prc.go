@@ -10,7 +10,7 @@ import (
 	"github.com/15mga/kiwi/util"
 )
 
-func (s *svc) registerPusAndReq() {
+func (s *svc) registerReq() {
 	kiwi.Router().BindReq(common.Chat, NewMsgReq, func(req kiwi.IRcvRequest) {
 		key, _ := util.MGet[string](req.Head(), "cid")
 		core.SharePrcReq[*pb.NewMsgReq](req, key, _svc.OnNewMsg)
