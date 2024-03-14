@@ -62,6 +62,7 @@ func (s *STransform) getFOV(tx, ty int32) (minX, maxX, minY, maxY int32) {
 }
 
 func (s *STransform) OnUpdate() {
+	kiwi.Debug("transform", nil)
 	s.DoJob(JobMovement)
 	s.processSceneExit()
 	s.processMoving()
@@ -95,18 +96,18 @@ func (s *STransform) onMovement(link *ds.FnLink, data []any) {
 	}
 	tnf := c.(*CTransform)
 	tnf.PushMovement(movement)
-	if !s.Scene().HasTagComponent(tnf, TagCompMove) {
-		link.Push(func() {
-			s.Scene().TagComponent(tnf, TagCompMove)
-		})
-	}
+	link.Push(func() {
+		s.Scene().TagComponent(tnf, TagCompMove)
+	})
 }
 
 func (s *STransform) processMoving() {
 	components, ok := s.PTagComponents(TagCompMove, func(component ecs.IComponent) {
 		tnf := component.(*CTransform)
 		tnf.ProcessMovement(s.Frame().NowMillSecs(), s.sceneWidth, s.sceneHeight)
-		tnf.UpdateTile(s.posToTile(tnf.Position))
+		if tnf.moved {
+			tnf.UpdateTile(s.posToTile(tnf.Position))
+		}
 	})
 	if !ok || len(components) == 0 {
 		return
@@ -122,10 +123,6 @@ func (s *STransform) processMoving() {
 		if tnf.IsTileChanged() {
 			s.Scene().UntagComponent(tnf, getTileTag(tnf.PrevTile))
 			s.Scene().TagComponent(tnf, TagCompTileChange, getTileTag(tnf.CurrTile))
-		}
-		if !tnf.IsMoving() {
-			//这里会修改components数组
-			s.Scene().UntagComponent(tnf, TagCompMove)
 		}
 		// 这里移动过程中，每一帧都会更新，
 		// 如果没有Movement，不发送则需要在客户端做预判与补偿
@@ -204,11 +201,6 @@ func (s *STransform) processSceneExit() {
 		return
 	}
 
-	//清理格子标签
-	for _, component := range components {
-		tnf := component.(*CTransform)
-		s.Scene().UntagComponent(tnf, getTileTag(tnf.CurrTile), TagCompMove) //移除的格子不需要处理移动
-	}
 	//广播事件
 	for _, component := range components {
 		c, _ := component.Entity().GetComponent(C_Event)

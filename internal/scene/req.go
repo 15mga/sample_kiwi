@@ -154,10 +154,6 @@ func (s *Svc) OnNewScene(pkt kiwi.IRcvRequest, req *pb.NewSceneReq, res *pb.NewS
 }
 
 func (s *Svc) OnDisposeScene(pkt kiwi.IRcvRequest, req *pb.DisposeSceneReq, res *pb.DisposeSceneRes) {
-	err := DisposeScene(req.SceneId)
-	if err != nil {
-		pkt.Err(err)
-		return
-	}
+	DisposeScene(req.SceneId)
 	pkt.Ok(res)
 }

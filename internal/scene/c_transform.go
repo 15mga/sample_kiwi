@@ -30,7 +30,7 @@ type CTransform struct {
 	CurrTile           util.Vec2Int
 	cEvent             *CEvent
 	tileChanged        bool
-	moving             bool
+	moved              bool
 }
 
 func (c *CTransform) Start() {
@@ -66,12 +66,19 @@ func (c *CTransform) ProcessMovement(nowMs int64, maxX, maxY float32) {
 	if c.movements.Available() > 0 {
 		for c.movements.Available() > 0 {
 			movement, _ := c.movements.Pop()
-			c.updatePosition(movement.Timestamp-c.lastMovement.Timestamp, c.lastMovement, maxX, maxY)
+			if !isStopMove(c.lastMovement) {
+				c.updatePosition(movement.Timestamp-c.lastMovement.Timestamp, c.lastMovement, maxX, maxY)
+				c.moved = true
+			}
 			c.lastMovement = movement
-			c.moving = c.lastMovement.MoveSpeed > 0
 		}
 	} else {
-		c.updatePosition(nowMs-c.lastMovement.Timestamp, c.lastMovement, maxX, maxY)
+		if isStopMove(c.lastMovement) {
+			c.moved = false
+		} else {
+			c.updatePosition(nowMs-c.lastMovement.Timestamp, c.lastMovement, maxX, maxY)
+			c.moved = true
+		}
 		c.lastMovement.Timestamp = nowMs
 	}
 }
@@ -79,10 +86,6 @@ func (c *CTransform) ProcessMovement(nowMs int64, maxX, maxY float32) {
 func (c *CTransform) ClearMovement() {
 	c.tileChanged = false
 	c.TransformEventData.Movement = nil
-}
-
-func (c *CTransform) IsMoving() bool {
-	return c.moving
 }
 
 func (c *CTransform) IsTileChanged() bool {
@@ -94,9 +97,6 @@ func isStopMove(movement *pb.SceneMovement) bool {
 }
 
 func (c *CTransform) updatePosition(durMs int64, movement *pb.SceneMovement, maxX, maxY float32) {
-	if isStopMove(movement) {
-		return
-	}
 	secs := float32(durMs) / 1000
 	offset := util.Vec2Mul(PbVecToVec2(movement.Direction), movement.MoveSpeed*secs)
 	pos := util.Vec2Add(PbVecToVec2(c.Position), offset)

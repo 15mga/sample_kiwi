@@ -19,6 +19,7 @@ func (s *Svc) OnGateSendToId(pkt kiwi.IRcvRequest, req *pb.GateSendToIdReq, res 
 	bytes, err := common.PackUserPus(svc, code, req.Payload)
 	if err != nil {
 		kiwi.TE(pkt.Tid(), err)
+		pkt.Err(err)
 		return
 	}
 	kiwi.Gate().Send(pkt.Tid(), req.Id, bytes, func(ok bool) {

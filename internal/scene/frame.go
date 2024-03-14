@@ -68,15 +68,12 @@ func NewScene(tid int64, scn *pb.Scene) *util.Err {
 	return nil
 }
 
-func DisposeScene(sceneId string) *util.Err {
+func DisposeScene(sceneId string) {
 	frame, ok := _Frames.Del(sceneId)
 	if !ok {
-		return util.NewErr(util.EcExist, util.M{
-			"scene id": sceneId,
-		})
+		return
 	}
 	frame.Stop()
-	return nil
 }
 
 func GetSceneDataById(sceneId string) (*pb.Scene, bool) {
