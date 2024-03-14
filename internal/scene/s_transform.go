@@ -62,7 +62,6 @@ func (s *STransform) getFOV(tx, ty int32) (minX, maxX, minY, maxY int32) {
 }
 
 func (s *STransform) OnUpdate() {
-	kiwi.Debug("transform", nil)
 	s.DoJob(JobMovement)
 	s.processSceneExit()
 	s.processMoving()
@@ -71,7 +70,7 @@ func (s *STransform) OnUpdate() {
 	s.DoJob(JobBehaviour)
 	s.FrameAfter().Push(func() {
 		s.Scene().ClearTag(TagCompTileChange)
-		s.PTagComponents(TagCompMove, func(component ecs.IComponent) {
+		s.PTagComponents(string(C_Transform), func(component ecs.IComponent) {
 			component.(*CTransform).ClearMovement()
 		})
 	})
@@ -96,13 +95,10 @@ func (s *STransform) onMovement(link *ds.FnLink, data []any) {
 	}
 	tnf := c.(*CTransform)
 	tnf.PushMovement(movement)
-	link.Push(func() {
-		s.Scene().TagComponent(tnf, TagCompMove)
-	})
 }
 
 func (s *STransform) processMoving() {
-	components, ok := s.PTagComponents(TagCompMove, func(component ecs.IComponent) {
+	components, ok := s.PTagComponents(string(C_Transform), func(component ecs.IComponent) {
 		tnf := component.(*CTransform)
 		tnf.ProcessMovement(s.Frame().NowMillSecs(), s.sceneWidth, s.sceneHeight)
 		if tnf.moved {
@@ -114,12 +110,10 @@ func (s *STransform) processMoving() {
 	}
 	//这里有并发写入，只能在frame协程
 	for _, component := range components {
-		if component == nil {
-			//这里不能删，否则检测IsMoving放到单独的数组再行处理
-			//下面的 untag TagCompMove会导致后面的component为空，遇到表明后面的都被移除了，可以直接结束循环，
-			break
-		}
 		tnf := component.(*CTransform)
+		if !tnf.moved {
+			continue
+		}
 		if tnf.IsTileChanged() {
 			s.Scene().UntagComponent(tnf, getTileTag(tnf.PrevTile))
 			s.Scene().TagComponent(tnf, TagCompTileChange, getTileTag(tnf.CurrTile))

@@ -39,7 +39,7 @@ func getConf(scene *pb.Scene) *Conf {
 }
 
 const (
-	MaxRobot = 1024 << 2
+	MaxRobot = 1024 << 3
 )
 
 func NewScene(tid int64, scn *pb.Scene) *util.Err {

@@ -54,6 +54,10 @@ func (c *CTransform) InitTile(tile util.Vec2Int) {
 	c.CurrTile = tile
 }
 
+func (c *CTransform) IsMoved() bool {
+	return c.moved
+}
+
 func (c *CTransform) PushMovement(movement *pb.SceneMovement) {
 	_ = c.movements.Put(&pb.SceneMovement{
 		Direction: movement.Direction,
