@@ -8,7 +8,6 @@ import (
 	"github.com/15mga/kiwi/util"
 	"github.com/15mga/kiwi/worker"
 	"math/rand"
-	"time"
 )
 
 var (
@@ -46,7 +45,7 @@ func NewSRobot(maxRobot int32) *SRobot {
 
 type SRobot struct {
 	ecs.System
-	sysTnf    *STransform
+	sysTile   *STile
 	maxRobot  int32
 	currRobot int32
 }
@@ -59,8 +58,8 @@ func (s *SRobot) OnBeforeStart() {
 
 func (s *SRobot) OnAfterStart() {
 	s.System.OnAfterStart()
-	sysTnf, _ := s.Frame().GetSystem(S_Transform)
-	s.sysTnf = sysTnf.(*STransform)
+	sysTile, _ := s.Frame().GetSystem(S_Tile)
+	s.sysTile = sysTile.(*STile)
 }
 
 func (s *SRobot) OnUpdate() {
@@ -84,27 +83,23 @@ func (s *SRobot) onRobotAdd(data []any) {
 		pawnId := sid.GetStrId()
 		e := ecs.NewEntity(pawnId)
 		var pos pb.Vector2
-		s.sysTnf.GenRandPos(&pos)
+		s.sysTile.GenRandPos(&pos)
 		//pos.X = rand.Float32() * 200
 		//pos.Y = rand.Float32() * 200
 		cpawn := NewCMonster(&pb.SceneMonster{
 			TplId: randMonsterTplId(),
 		})
-		tnf := NewCTransform(&pos)
+		tile := NewCTile()
 		e.AddComponents(
-			NewCBehaviour(&pb.SceneBehaviour{
-				Timestamp: time.Now().UnixMilli(),
-				BehaviourType: &pb.SceneBehaviour_Idle{
-					Idle: &pb.BehaviourIdle{},
-				},
-			}),
-			tnf,
+			NewCBehaviour(),
+			NewCTransform(&pos),
+			tile,
 			NewCRobot(),
 			cpawn,
 			NewCEvent(cpawn),
 		)
 		_ = s.Scene().AddEntity(e)
-		s.Scene().TagComponent(tnf, TagCompSceneEntry)
+		s.Scene().TagComponent(tile, TagCompSceneEntry)
 	}
 	handler(s.currRobot)
 }
@@ -129,20 +124,18 @@ func (s *SRobot) updateRobot() {
 		return
 	}
 	worker.PToLink[ecs.IComponent, ecs.IComponent](components, func(component ecs.IComponent, d *ds.Link[ecs.IComponent]) {
-		if !component.(*CRobot).Update(s.Frame().DeltaMillSec()) {
-			return
+		if component.(*CRobot).Update(s.Frame().DeltaMillSec()) {
+			d.Push(component)
 		}
-		d.Push(component)
 	}, func(d *ds.Link[ecs.IComponent]) {
 		d.Iter(s.putMovementJob)
 	})
 }
 
 func (s *SRobot) putMovementJob(component ecs.IComponent) {
-	var dir pb.Vector2
-	Vec2ToPbVec(util.RandDir(), &dir)
-	s.Frame().PutJob(JobMovement, int64(0), component.Entity().Id(), &pb.SceneMovement{
-		Direction: &dir,
-		MoveSpeed: 4,
+	robot := component.(*CRobot)
+	s.Frame().PutJob(JobMovement, int64(0), component.Entity().Id(), &pb.SceneMovementReq{
+		Direction: robot.dir,
+		MoveSpeed: robot.speed,
 	})
 }

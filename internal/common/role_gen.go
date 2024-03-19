@@ -54,9 +54,9 @@ var MsgRole = map[kiwi.TSvcCode][]int64{
 	5018: {RPlayer},
 	5021: {RPlayer},
 	7000: {RPlayer},
-	7002: {RPlayer},
+	7003: {RPlayer},
+	7005: {RPlayer},
 	7007: {RPlayer},
-	7009: {RPlayer},
 	8000: {RPlayer},
 	9000: {RPlayer, RAdmin},
 }

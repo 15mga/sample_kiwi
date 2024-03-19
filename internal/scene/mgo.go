@@ -12,12 +12,6 @@ const (
 )
 
 const (
-	BehaviourAreaSkillPosition = "position"
-	BehaviourAreaSkillSkillId  = "skill_id"
-
-	BehaviourTargetSkillSkillId  = "skill_id"
-	BehaviourTargetSkillTargetId = "target_id"
-
 	SceneAdmitted = "admitted" //准入玩家
 	SceneId       = "id"
 	SceneMode     = "mode"
@@ -26,32 +20,19 @@ const (
 	SceneAdmittedPlayerEntered = "entered"
 	SceneAdmittedPlayerId      = "id"
 
-	SceneBehaviourAreaSkill = "area_skill"
-	SceneBehaviourIdle      = "idle"
-	SceneBehaviourPawnSkill = "pawn_skill"
-	SceneBehaviourRun       = "run"
-	SceneBehaviourTimestamp = "timestamp" //行为的时间戳,unix millSec
+	SceneEventId        = "id"
+	SceneEventInvisible = "invisible"
+	SceneEventMovement  = "movement"
+	SceneEventSkill     = "skill"
+	SceneEventVisible   = "visible"
 
-	SceneBehaviourEvtBehaviour = "behaviour"
-	SceneBehaviourEvtPawnId    = "pawn_id"
+	SceneInvisibleTimestamp = "timestamp" //时间戳,unix millSec
 
 	SceneMonsterTplId = "tpl_id"
 
-	SceneMovementDirection = "direction"  //方向模
-	SceneMovementMoveSpeed = "move_speed" //移动速度
-	SceneMovementTimestamp = "timestamp"  //移动的时间戳,unix millSec
-
-	SceneMovementEvtDuration = "duration" //移动的时间戳,unix millSec
-	SceneMovementEvtPosition = "position" //移动速度
-
-	ScenePawnPawn             = "pawn"
-	ScenePawnPlayerGateAddr   = "player_gate_addr"
-	ScenePawnPlayerGateNodeId = "player_gate_node_id"
-
-	ScenePawnEvtMonster  = "monster"
-	ScenePawnEvtPawnId   = "pawn_id"
-	ScenePawnEvtPlayer   = "player"
-	ScenePawnEvtPosition = "position"
+	SceneMovementDuration  = "duration"  //移动的时间,单位毫秒
+	SceneMovementPosition  = "position"  //方向模
+	SceneMovementTimestamp = "timestamp" //时间戳,unix millSec
 
 	ScenePlayerAvatar = "avatar"
 	ScenePlayerGender = "gender"
@@ -59,13 +40,20 @@ const (
 	ScenePlayerNick   = "nick"
 	ScenePlayerTeamId = "team_id"
 
+	SceneSkillPosition  = "position"
+	SceneSkillSkillId   = "skill_id"
+	SceneSkillTargetId  = "target_id"
+	SceneSkillTimestamp = "timestamp" //时间戳,unix millSec
+
 	SceneTemplateId     = "_id"
 	SceneTemplateHeight = "height"
 	SceneTemplateName   = "name"
 	SceneTemplateWidth  = "width"
 
-	SceneTransformEvtMovement = "movement"
-	SceneTransformEvtPawnId   = "pawn_id"
+	SceneVisibleMonster   = "monster"
+	SceneVisiblePlayer    = "player"
+	SceneVisiblePosition  = "position"
+	SceneVisibleTimestamp = "timestamp" //时间戳,unix millSec
 )
 
 func (s *svc) initColl() {

@@ -38,14 +38,13 @@ func (c *CPlayer) SetGateNodeId(gateNodeId int64) {
 }
 
 func (c *CPlayer) ProcessEvents(event *CEvent) {
-	//tnfComp, _ := c.Entity().GetComponent(C_Transform)
-	//tnf := tnfComp.(*CTransform)
+	//tile := c.Entity().MGetComponent(C_Tile).(*CTile)
 	//kiwi.Debug("player process", util.M{
 	//	"player":    c.data,
-	//	"curr tile": tnf.CurrTile,
-	//	"events":    event.Data,
+	//	"curr tile": tile.currTile,
+	//	"events":    event.eventPus,
 	//})
-	common.ReqGateNodeToAddr(0, c.gateNodeId, c.gateAgentAddr, event.Data,
+	common.ReqGateNodeToAddr(0, c.gateNodeId, c.gateAgentAddr, event.eventPus,
 		func(tid int64, m util.M, code uint16) {
 
 		}, func(tid int64, m util.M, msg util.IMsg) {

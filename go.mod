@@ -2,6 +2,10 @@ module game
 
 go 1.21
 
+replace (
+	github.com/15mga/kiwi => ../kiwi
+)
+
 require (
 	github.com/15mga/kiwi v0.0.1
 	github.com/15mga/kiwi_tool v0.0.0-20240313121430-2bb5f80fa9cc

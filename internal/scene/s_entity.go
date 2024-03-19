@@ -4,7 +4,6 @@ import (
 	"game/proto/pb"
 	"github.com/15mga/kiwi/ecs"
 	"github.com/15mga/kiwi/util"
-	"time"
 )
 
 func NewSEntity() *SEntity {
@@ -84,15 +83,11 @@ func (s *SEntity) onEntityAdd(data []any) {
 func (s *SEntity) entry(tid int64, pawn *pb.ScenePawn) {
 	pawnId := pawn.Pawn.PawnId
 	e := ecs.NewEntity(pawnId)
-	tnf := NewCTransform(pawn.Pawn.Position)
+	tile := NewCTile()
 	e.AddComponents(
-		NewCBehaviour(&pb.SceneBehaviour{
-			Timestamp: time.Now().UnixMilli(),
-			BehaviourType: &pb.SceneBehaviour_Idle{
-				Idle: &pb.BehaviourIdle{},
-			},
-		}),
-		tnf,
+		NewCBehaviour(),
+		NewCTransform(pawn.Pawn.Position),
+		tile,
 	)
 	var cpawn ICPawn
 	switch p := pawn.Pawn.PawnType.(type) {
@@ -107,13 +102,13 @@ func (s *SEntity) entry(tid int64, pawn *pb.ScenePawn) {
 		NewCEvent(cpawn),
 	)
 	_ = s.Scene().AddEntity(e)
-	s.Scene().TagComponent(tnf, TagCompSceneEntry)
+	s.Scene().TagComponent(tile, TagCompSceneEntry)
 }
 
 func (s *SEntity) onEntityDel(data []any) {
 	_, eids := util.SplitSlc2[int64, []string](data)
 	for _, eid := range eids {
-		s.Scene().TagEntityComponent(eid, C_Transform, TagCompSceneExit)
+		s.Scene().TagEntityComponent(eid, C_Tile, TagCompSceneExit)
 	}
 	s.FrameAfter().Push(func() {
 		for _, eid := range eids {

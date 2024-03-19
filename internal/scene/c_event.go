@@ -12,21 +12,7 @@ func NewCEvent(pawn ICPawn) *CEvent {
 	return &CEvent{
 		Component: ecs.NewComponent(C_Event),
 		pawn:      pawn,
-		//transformEvents: ds.NewKSet[string, *pb.SceneTransformEvt](16, func(evt *pb.SceneTransformEvt) string {
-		//	return evt.PawnId
-		//}),
-		//visibleEvents: ds.NewKSet[string, *pb.ScenePawnEvt](16, func(evt *pb.ScenePawnEvt) string {
-		//	return evt.PawnId
-		//}),
-		//invisibleEvents: ds.NewArray[string](16),
-		//behaviourEvents: ds.NewKSet[string, *pb.SceneBehaviourEvt](16, func(evt *pb.SceneBehaviourEvt) string {
-		//	return evt.PawnId
-		//}),
-		transformEvents: ds.NewArray[*pb.SceneTransformEvt](16),
-		visibleEvents:   ds.NewArray[*pb.ScenePawnEvt](16),
-		invisibleEvents: ds.NewArray[string](16),
-		behaviourEvents: ds.NewArray[*pb.SceneBehaviourEvt](16),
-		Data:            &pb.SceneEventPus{},
+		eventPus:  &pb.SceneEventPus{},
 	}
 }
 
@@ -41,17 +27,13 @@ type CEvent struct {
 	visible   *pb.ScenePawnEvt
 	invisible string
 	behaviour *pb.SceneBehaviourEvt
-	transform *pb.SceneTransformEvt
+	movement  *pb.SceneMovementEvt
 	//接受别人的
-	Data *pb.SceneEventPus
-	//transformEvents *ds.KSet[string, *pb.SceneTransformEvt]
-	//visibleEvents   *ds.KSet[string, *pb.ScenePawnEvt]
-	//invisibleEvents *ds.Array[string]
-	//behaviourEvents *ds.KSet[string, *pb.SceneBehaviourEvt]
-	transformEvents *ds.Array[*pb.SceneTransformEvt]
-	visibleEvents   *ds.Array[*pb.ScenePawnEvt]
-	invisibleEvents *ds.Array[string]
-	behaviourEvents *ds.Array[*pb.SceneBehaviourEvt]
+	eventPus     *pb.SceneEventPus
+	rcvInvisible *ds.Array[string]
+	rcvVisible   *ds.Array[*pb.ScenePawnEvt]
+	rcvBehaviour *ds.Array[*pb.SceneBehaviourEvt]
+	rcvMovement  *ds.Array[*pb.SceneMovementEvt]
 }
 
 func (c *CEvent) Start() {
@@ -64,12 +46,16 @@ func (c *CEvent) Start() {
 	}
 	tnfComp := comp.(*CTransform)
 	entityId := c.Entity().Id()
-	c.transform = tnfComp.TransformEventData
+	c.movement = tnfComp.movementEvt
 	c.invisible = entityId
 	c.visible = &pb.ScenePawnEvt{
 		PawnId:   entityId,
-		Position: tnfComp.Position,
+		Position: tnfComp.position,
 	}
+	c.rcvInvisible = ds.NewArray[string](16)
+	c.rcvVisible = ds.NewArray[*pb.ScenePawnEvt](16)
+	c.rcvBehaviour = ds.NewArray[*pb.SceneBehaviourEvt](64)
+	c.rcvMovement = ds.NewArray[*pb.SceneMovementEvt](128)
 	switch pawn.(type) {
 	case *CPlayer:
 		c.visible.PawnType = &pb.ScenePawnEvt_Player{
@@ -94,55 +80,59 @@ func (c *CEvent) getPawn() (IPawn, bool) {
 	return nil, false
 }
 
-func (c *CEvent) AddTransformEvent(target *CEvent) {
-	if c.pawn == nil {
-		return
-	} //自己的也发送用于纠正
-	//_ = c.transformEvents.Add(target.transform)
-	c.transformEvents.Add(target.transform)
+func (c *CEvent) PushInvisible(invisible []string) {
+	c.rcvInvisible.AddRange(invisible...)
 }
 
-func (c *CEvent) AddVisibleEvents(target *CEvent) {
-	if c.pawn == nil || target == c {
-		return
-	}
-	//_ = c.visibleEvents.Add(target.visible)
-	c.visibleEvents.Add(target.visible)
+func (c *CEvent) PushVisible(visible []*pb.ScenePawnEvt) {
+	c.rcvVisible.AddRange(visible...)
 }
 
-func (c *CEvent) AddInvisibleEvent(target *CEvent) {
-	if c.pawn == nil || target == c {
-		return
-	}
-	c.invisibleEvents.Add(target.invisible)
+func (c *CEvent) PushMovement(movement []*pb.SceneMovementEvt) {
+	c.rcvMovement.AddRange(movement...)
 }
 
-func (c *CEvent) AddBehaviourEvent(target *CEvent) {
-	if c.pawn == nil || target == c {
-		return
-	}
-	//_ = c.behaviourEvents.Add(target.behaviour)
-	c.behaviourEvents.Add(target.behaviour)
+func (c *CEvent) PushBehaviour(behaviour []*pb.SceneBehaviourEvt) {
+	c.rcvBehaviour.AddRange(behaviour...)
 }
 
 func (c *CEvent) ProcessEvents() {
-	if c.pawn == nil {
+	if c.rcvVisible.Count() == 0 &&
+		c.rcvInvisible.Count() == 0 &&
+		c.rcvMovement.Count() == 0 {
 		return
 	}
-
-	c.Data.Invisible = c.invisibleEvents.Values()
-	c.Data.Visible = c.visibleEvents.Values()
-	c.Data.Transform = c.transformEvents.Values()
-	c.Data.Behaviour = c.behaviourEvents.Values()
-
-	if len(c.Data.Invisible) > 0 ||
-		len(c.Data.Visible) > 0 ||
-		len(c.Data.Transform) > 0 ||
-		len(c.Data.Behaviour) > 0 {
-		c.pawn.ProcessEvents(c)
-		c.invisibleEvents.Reset()
-		c.visibleEvents.Reset()
-		c.transformEvents.Reset()
-		c.behaviourEvents.Reset()
+	dirty := false
+	if c.rcvInvisible.Count() > 0 {
+		c.eventPus.Invisible = c.rcvInvisible.Values()
+		dirty = true
+	} else {
+		c.eventPus.Invisible = nil
 	}
+	if c.rcvVisible.Count() > 0 {
+		c.eventPus.Visible = c.rcvVisible.Values()
+		dirty = true
+	} else {
+		c.eventPus.Visible = nil
+	}
+	if c.rcvMovement.Count() > 0 {
+		c.eventPus.Movement = c.rcvMovement.Values()
+		dirty = true
+	} else {
+		c.eventPus.Movement = nil
+	}
+	if c.rcvBehaviour.Count() > 0 {
+		c.eventPus.Behaviour = c.rcvBehaviour.Values()
+		dirty = true
+	} else {
+		c.eventPus.Behaviour = nil
+	}
+	if !dirty {
+		return
+	}
+	c.pawn.ProcessEvents(c)
+	c.rcvInvisible.Reset()
+	c.rcvVisible.Reset()
+	c.rcvMovement.Reset()
+	c.rcvBehaviour.Reset()
 }

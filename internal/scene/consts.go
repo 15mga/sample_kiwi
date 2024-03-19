@@ -6,10 +6,11 @@ const (
 	TagCompSceneEntry = "scene_entry"
 	TagCompSceneExit  = "scene_exit"
 	TagCompMove       = "move"
-	TagCompTileChange = "tile_change"
+	TagCompBehaviour  = "behaviour"
 )
 
 const (
+	S_Tile       = "tile"
 	S_Entity     = "entity"
 	S_Event      = "event"
 	S_Monster    = "monster"
@@ -24,6 +25,7 @@ const (
 	C_Event     ecs.TComponent = "event"
 	C_Monster   ecs.TComponent = "monster"
 	C_Player    ecs.TComponent = "player"
+	C_Tile      ecs.TComponent = "tile"
 	C_Transform ecs.TComponent = "transform"
 	C_Robot     ecs.TComponent = "robot"
 )

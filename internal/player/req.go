@@ -17,11 +17,6 @@ import (
 
 func (s *Svc) OnPlayer(pkt kiwi.IRcvRequest, req *pb.PlayerReq, res *pb.PlayerRes) {
 	addr, _ := util.MGet[string](pkt.Head(), common.HdGateAddr)
-	opt := options.FindOneAndUpdate().SetProjection(bson.D{
-		{Status, 1},
-		{LastGateNode, 1},
-		{LastAddr, 1},
-	})
 	uid, _ := util.MGet[string](pkt.Head(), common.HdUserId)
 	var player pb.Player
 	err := mgo.FindOneAndUpdate(SchemaPlayer, bson.D{
@@ -33,7 +28,7 @@ func (s *Svc) OnPlayer(pkt kiwi.IRcvRequest, req *pb.PlayerReq, res *pb.PlayerRe
 			{LastAddr, addr},
 			{LastSignIn, time.Now().Unix()},
 		},
-	}, &player, opt)
+	}, &player)
 	if err != nil {
 		pkt.Fail(EcPlayer_NotExistId)
 		return

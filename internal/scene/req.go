@@ -87,7 +87,7 @@ func (s *Svc) OnSceneMovement(pkt kiwi.IRcvRequest, req *pb.SceneMovementReq, re
 		return
 	}
 	playerId := pkt.HeadId()
-	PushJob(sceneId, JobMovement, pkt.Tid(), playerId, req.Movement)
+	PushJob(sceneId, JobMovement, pkt.Tid(), playerId, req)
 	pkt.Ok(res)
 }
 

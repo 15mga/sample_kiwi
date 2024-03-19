@@ -73,6 +73,10 @@ type RedisConf struct {
 	Db       int
 }
 
+type TestConf struct {
+	MaxRobot int32
+}
+
 type Config struct {
 	Id       int64
 	Mode     string
@@ -84,6 +88,7 @@ type Config struct {
 	Gate     GateConf
 	Local    bool
 	SvcToVer map[string]string
+	Test     TestConf
 }
 
 func LoadConf(confFolder string) {

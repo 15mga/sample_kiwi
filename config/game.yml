@@ -55,8 +55,12 @@ mongo:
 gate:
   deadline: 30
   packetLimit: 3
-  errLimit: 10
+  errLimit: 1015
   tickSecs: 5
   connCap: 4096
   ip: ""
   web: 7737
+test:
+#  maxRobot: 8192
+#  maxRobot: 16384
+  maxRobot: 65536

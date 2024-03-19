@@ -1,6 +1,7 @@
 package scene
 
 import (
+	"game/internal/common"
 	"game/proto/pb"
 	"github.com/15mga/kiwi"
 	"github.com/15mga/kiwi/ds"
@@ -11,8 +12,7 @@ import (
 
 const (
 	_SceneData = "scene_data"
-	_TileSize  = 32
-	//_TileSize = 10
+	_MaxCount  = 1024 << 7
 )
 
 var (
@@ -22,25 +22,21 @@ var (
 )
 
 type Conf struct {
-	TileSize int32
-	Width    int32
-	Height   int32
-	FovLaps  int32
-	Pawns    []*pb.ScenePawn
+	TileSize int
+	Width    int
+	Height   int
+	FovLaps  int
+	Pawns    []*pb.SceneVisible
 }
 
 func getConf(scene *pb.Scene) *Conf {
 	return &Conf{
 		TileSize: 64,
-		Width:    1024,
-		Height:   1024,
+		Width:    2048,
+		Height:   2048,
 		FovLaps:  1,
 	}
 }
-
-const (
-	MaxRobot = 1024 << 3
-)
 
 func NewScene(tid int64, scn *pb.Scene) *util.Err {
 	_, ok := _Frames.Get(scn.Id)
@@ -53,10 +49,10 @@ func NewScene(tid int64, scn *pb.Scene) *util.Err {
 	scene := ecs.NewScene(scn.Id, ecs.TScene(scn.TplId))
 	scene.Data().Set(_SceneData, scn)
 	frame := ecs.NewFrame(scene, ecs.FrameSystems(
-		NewSRobot(MaxRobot),
 		NewSEntity(),
-		NewSTransform(conf.TileSize, conf.Width, conf.Height, conf.FovLaps),
-		NewSBehaviour(),
+		NewSRobot(common.Conf().Test.MaxRobot),
+		NewSTransform(conf.Width, conf.Height),
+		NewSTile(conf.TileSize, conf.Width, conf.Height, conf.FovLaps),
 		NewSEvent(),
 		//NewSNtcSender(),
 	), ecs.FrameTickDur(time.Millisecond*50))

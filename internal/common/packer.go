@@ -38,7 +38,7 @@ func UnpackUserReq(bytes []byte) (svc kiwi.TSvc, code kiwi.TCode, seqId uint32, 
 
 func PackUserOk(seqId uint32, payload []byte) ([]byte, *util.Err) {
 	var buffer util.ByteBuffer
-	buffer.InitCap(5 + uint32(len(payload)))
+	buffer.InitCap(5 + len(payload))
 	buffer.WUint8(0)
 	buffer.WUint32(seqId)
 	_, e := buffer.Write(payload)
@@ -85,7 +85,7 @@ func UnpackUserResFail(bytes []byte) (seqId uint32, resCode uint16, err *util.Er
 
 func PackUserPus(svc kiwi.TSvc, code kiwi.TCode, ntc []byte) ([]byte, *util.Err) {
 	var buffer util.ByteBuffer
-	buffer.InitCap(3 + uint32(len(ntc)))
+	buffer.InitCap(3 + len(ntc))
 	buffer.WUint8(2)
 	buffer.WUint16(kiwi.MergeSvcCode(svc, code))
 	_, e := buffer.Write(ntc)
