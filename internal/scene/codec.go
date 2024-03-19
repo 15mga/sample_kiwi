@@ -13,15 +13,15 @@ import (
 const (
 	SceneEntryReq      kiwi.TCode = 0
 	SceneEntryRes      kiwi.TCode = 1
-	SceneEventPus      kiwi.TCode = 2
-	SceneRobotAddReq   kiwi.TCode = 3
-	SceneRobotAddRes   kiwi.TCode = 4
-	SceneRobotClearReq kiwi.TCode = 5
-	SceneRobotClearRes kiwi.TCode = 6
-	SceneMovementReq   kiwi.TCode = 7
-	SceneMovementRes   kiwi.TCode = 8
-	SceneSkillReq      kiwi.TCode = 9
-	SceneSkillRes      kiwi.TCode = 10
+	SceneMovementReq   kiwi.TCode = 2
+	SceneMovementRes   kiwi.TCode = 3
+	SceneBehaviourReq  kiwi.TCode = 4
+	SceneBehaviourRes  kiwi.TCode = 5
+	SceneEventPus      kiwi.TCode = 6
+	SceneRobotAddReq   kiwi.TCode = 7
+	SceneRobotAddRes   kiwi.TCode = 8
+	SceneRobotClearReq kiwi.TCode = 9
+	SceneRobotClearRes kiwi.TCode = 10
 	NewSceneReq        kiwi.TCode = 100
 	NewSceneRes        kiwi.TCode = 101
 	DisposeSceneReq    kiwi.TCode = 102
@@ -39,6 +39,18 @@ func (svc *svc) bindCodecFac() {
 	kiwi.Codec().BindFac(common.Scene, SceneEntryRes, func() util.IMsg {
 		return &pb.SceneEntryRes{}
 	})
+	kiwi.Codec().BindFac(common.Scene, SceneMovementReq, func() util.IMsg {
+		return &pb.SceneMovementReq{}
+	})
+	kiwi.Codec().BindFac(common.Scene, SceneMovementRes, func() util.IMsg {
+		return &pb.SceneMovementRes{}
+	})
+	kiwi.Codec().BindFac(common.Scene, SceneBehaviourReq, func() util.IMsg {
+		return &pb.SceneBehaviourReq{}
+	})
+	kiwi.Codec().BindFac(common.Scene, SceneBehaviourRes, func() util.IMsg {
+		return &pb.SceneBehaviourRes{}
+	})
 	kiwi.Codec().BindFac(common.Scene, SceneEventPus, func() util.IMsg {
 		return &pb.SceneEventPus{}
 	})
@@ -53,18 +65,6 @@ func (svc *svc) bindCodecFac() {
 	})
 	kiwi.Codec().BindFac(common.Scene, SceneRobotClearRes, func() util.IMsg {
 		return &pb.SceneRobotClearRes{}
-	})
-	kiwi.Codec().BindFac(common.Scene, SceneMovementReq, func() util.IMsg {
-		return &pb.SceneMovementReq{}
-	})
-	kiwi.Codec().BindFac(common.Scene, SceneMovementRes, func() util.IMsg {
-		return &pb.SceneMovementRes{}
-	})
-	kiwi.Codec().BindFac(common.Scene, SceneSkillReq, func() util.IMsg {
-		return &pb.SceneSkillReq{}
-	})
-	kiwi.Codec().BindFac(common.Scene, SceneSkillRes, func() util.IMsg {
-		return &pb.SceneSkillRes{}
 	})
 	kiwi.Codec().BindFac(common.Scene, NewSceneReq, func() util.IMsg {
 		return &pb.NewSceneReq{}

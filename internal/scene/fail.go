@@ -10,19 +10,19 @@ const (
 	//不允许进入
 	EcSceneEntry_Entryed = 3
 	//没有进入场景
+	EcSceneMovement_NotEntry = 1
+	//没有进入场景
+	EcSceneBehaviour_NotEntry = 1
+	//不能使用该技能
+	EcSceneBehaviour_NoSkill = 2
+	//没冷却
+	EcSceneBehaviour_NoCd = 3
+	//不能选择该目标
+	EcSceneBehaviour_NoTarget = 4
+	//没有进入场景
 	EcSceneRobotAdd_NotEntry = 1
 	//没有进入场景
 	EcSceneRobotClear_NotEntry = 1
-	//没有进入场景
-	EcSceneMovement_NotEntry = 1
-	//没有进入场景
-	EcSceneSkill_NotEntry = 1
-	//不能使用该技能
-	EcSceneSkill_NoSkill = 2
-	//没冷却
-	EcSceneSkill_NoCd = 3
-	//不能选择该目标
-	EcSceneSkill_NoTarget = 4
 	//场景不存在
 	EcSceneGet_NotExistScene = 1
 )

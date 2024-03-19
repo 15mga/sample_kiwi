@@ -12,19 +12,19 @@ func (s *svc) OnSceneEntry(pkt kiwi.IRcvRequest, req *pb.SceneEntryReq, res *pb.
 	pkt.Err2(util.EcNotImplement, util.M{"req": req})
 }
 
+func (s *svc) OnSceneMovement(pkt kiwi.IRcvRequest, req *pb.SceneMovementReq, res *pb.SceneMovementRes) {
+	pkt.Err2(util.EcNotImplement, util.M{"req": req})
+}
+
+func (s *svc) OnSceneBehaviour(pkt kiwi.IRcvRequest, req *pb.SceneBehaviourReq, res *pb.SceneBehaviourRes) {
+	pkt.Err2(util.EcNotImplement, util.M{"req": req})
+}
+
 func (s *svc) OnSceneRobotAdd(pkt kiwi.IRcvRequest, req *pb.SceneRobotAddReq, res *pb.SceneRobotAddRes) {
 	pkt.Err2(util.EcNotImplement, util.M{"req": req})
 }
 
 func (s *svc) OnSceneRobotClear(pkt kiwi.IRcvRequest, req *pb.SceneRobotClearReq, res *pb.SceneRobotClearRes) {
-	pkt.Err2(util.EcNotImplement, util.M{"req": req})
-}
-
-func (s *svc) OnSceneMovement(pkt kiwi.IRcvRequest, req *pb.SceneMovementReq, res *pb.SceneMovementRes) {
-	pkt.Err2(util.EcNotImplement, util.M{"req": req})
-}
-
-func (s *svc) OnSceneSkill(pkt kiwi.IRcvRequest, req *pb.SceneSkillReq, res *pb.SceneSkillRes) {
 	pkt.Err2(util.EcNotImplement, util.M{"req": req})
 }
 
