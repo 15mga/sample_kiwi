@@ -14,7 +14,7 @@ func (s *Svc) OnSceneEntry(pkt kiwi.IRcvRequest, req *pb.SceneEntryReq, res *pb.
 	playerId := pkt.HeadId()
 	sceneId, ok := util.MGet[string](pkt.Head(), common.HdRoomId) //场景id使用的房间id
 	if !ok {
-		pkt.Fail(EcSceneBehaviour_NotEntry)
+		pkt.Fail(EcSceneEntry_NoEntry)
 		return
 	}
 	core.AsyncSubReq[*pb.PlayerIdRes](pkt, pkt.Head(), &pb.PlayerIdReq{
@@ -36,22 +36,21 @@ func (s *Svc) OnSceneEntry(pkt kiwi.IRcvRequest, req *pb.SceneEntryReq, res *pb.
 		addr, _ := util.MGet[string](pkt.Head(), common.HdGateAddr)
 		nodeId, _ := util.MGet[int64](pkt.Head(), common.HdGateNodeId)
 		position := s.getPlayerPosition(p)
-		pawn := &pb.ScenePawn{
-			Pawn: &pb.ScenePawnEvt{PawnId: p.Id,
-				Position: position,
-				PawnType: &pb.ScenePawnEvt_Player{
-					Player: &pb.ScenePlayer{
-						Nick:   p.Nick,
-						Avatar: p.Avatar,
-						TeamId: p.TeamId,
-						Gender: p.Gender,
-					},
+		pawn := &pb.SceneVisible{
+			Position: position,
+			PawnType: &pb.SceneVisible_Player{
+				Player: &pb.ScenePlayer{
+					Nick:   p.Nick,
+					Avatar: p.Avatar,
+					TeamId: p.TeamId,
+					Gender: p.Gender,
+					Hero:   p.Hero,
 				},
 			},
-			PlayerGateAddr:   addr,
-			PlayerGateNodeId: nodeId,
+			GateAddr:   addr,
+			GateNodeId: nodeId,
 		}
-		ok := PushJob(sceneId, JobEntityAdd, tid, pawn,
+		ok := PushJob(sceneId, JobEntityAdd, tid, p.Id, pawn,
 			func(err *util.Err) {
 				if err != nil {
 					pkt.Err(err)
@@ -104,22 +103,6 @@ func (s *Svc) OnSceneGet(pkt kiwi.IRcvRequest, req *pb.SceneGetReq, res *pb.Scen
 func (s *Svc) OnSceneHas(pkt kiwi.IRcvRequest, req *pb.SceneHasReq, res *pb.SceneHasRes) {
 	res.Exist = HasScene(req.Id)
 	pkt.Ok(res)
-}
-
-func (s *Svc) OnSceneBehaviour(pkt kiwi.IRcvRequest, req *pb.SceneBehaviourReq, res *pb.SceneBehaviourRes) {
-	sceneId, ok := util.MGet[string](pkt.Head(), common.HdSceneId)
-	if !ok {
-		pkt.Fail(EcSceneBehaviour_NotEntry)
-		return
-	}
-	playerId := pkt.HeadId()
-	PushJob(sceneId, JobBehaviour, playerId, req.Behaviour, func(code uint16) {
-		if code > 0 {
-			pkt.Fail(code)
-			return
-		}
-		pkt.Ok(res)
-	})
 }
 
 func (s *Svc) OnSceneRobotAdd(pkt kiwi.IRcvRequest, req *pb.SceneRobotAddReq, res *pb.SceneRobotAddRes) {

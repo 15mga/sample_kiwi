@@ -63,4 +63,4 @@ gate:
 test:
 #  maxRobot: 8192
 #  maxRobot: 16384
-  maxRobot: 65536
+  maxRobot: 262144

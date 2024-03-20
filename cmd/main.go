@@ -15,13 +15,13 @@ import (
 	"github.com/15mga/kiwi/log"
 	"github.com/15mga/kiwi/util/etd"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"net/http"
-	_ "net/http/pprof"
+	//"net/http"
+	//_ "net/http/pprof"
 	"os"
 )
 
 func main() {
-	go http.ListenAndServe("0.0.0.0:6060", nil)
+	//go http.ListenAndServe("0.0.0.0:6060", nil)
 	wd, _ := os.Getwd()
 	//加载配置文件
 	common.LoadConf(fmt.Sprintf("%s/config", wd))

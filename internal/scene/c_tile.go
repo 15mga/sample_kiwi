@@ -32,14 +32,11 @@ type CTile struct {
 func (c *CTile) Start() {
 	c.cEvent = c.Entity().MGetComponent(C_Event).(*CEvent)
 	c.cTnf = c.Entity().MGetComponent(C_Transform).(*CTransform)
-	c.prevTile = util.Vec2Int{
-		X: -1,
-		Y: -1,
-	}
 }
 
 func (c *CTile) InitTile(tile util.Vec2Int) {
 	c.currTile = tile
+	c.prevTile = tile
 }
 
 func (c *CTile) ResetTileChanged() {

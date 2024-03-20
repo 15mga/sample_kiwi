@@ -12,7 +12,7 @@ import (
 
 const (
 	_SceneData = "scene_data"
-	_MaxCount  = 1024 << 7
+	_MaxCount  = 1024 << 8
 )
 
 var (
@@ -32,8 +32,8 @@ type Conf struct {
 func getConf(scene *pb.Scene) *Conf {
 	return &Conf{
 		TileSize: 64,
-		Width:    2048,
-		Height:   2048,
+		Width:    4096,
+		Height:   4096,
 		FovLaps:  1,
 	}
 }

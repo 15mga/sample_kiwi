@@ -6,7 +6,6 @@ const (
 	TagCompSceneEntry = "scene_entry"
 	TagCompSceneExit  = "scene_exit"
 	TagCompMove       = "move"
-	TagCompBehaviour  = "behaviour"
 )
 
 const (
@@ -16,12 +15,10 @@ const (
 	S_Monster    = "monster"
 	S_Ntc_Sender = "notice_sender"
 	S_Transform  = "transform"
-	S_Behaviour  = "behaviour"
 	S_Robot      = "robot"
 )
 
 const (
-	C_Behaviour ecs.TComponent = "behaviour"
 	C_Event     ecs.TComponent = "event"
 	C_Monster   ecs.TComponent = "monster"
 	C_Player    ecs.TComponent = "player"
@@ -34,7 +31,6 @@ const (
 	JobEntityAdd  = "entity_add"
 	JobEntityDel  = "entity_del"
 	JobMovement   = "movement"
-	JobBehaviour  = "behaviour"
 	JobSendNtc    = "send_ntc"
 	JobRobotAdd   = "robot_add"
 	JobRobotClear = "robot_clear"

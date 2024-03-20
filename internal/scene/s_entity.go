@@ -32,68 +32,65 @@ func (s *SEntity) OnUpdate() {
 }
 
 func (s *SEntity) onEntityAdd(data []any) {
-	tid, pawn, handler := util.SplitSlc3[int64, *pb.ScenePawn, func(*util.Err)](data)
-	if pawn.Pawn.Position == nil {
+	tid, id, visible, handler := util.SplitSlc4[int64, string, *pb.SceneVisible, func(*util.Err)](data)
+	if visible.Position == nil {
 		handler(util.NewErr(util.EcParamsErr, util.M{
 			"error": "not set position",
 		}))
 	}
-	if pawn.Pawn.PawnType == nil {
+	if visible.PawnType == nil {
 		handler(util.NewErr(util.EcParamsErr, util.M{
 			"error": "not set pawn",
 		}))
 		return
 	}
 
-	pawnId := pawn.Pawn.PawnId
 	sd := GetSceneDataByFrame(s.Frame())
-	if _, ok := pawn.Pawn.PawnType.(*pb.ScenePawnEvt_Player); ok {
+	if _, ok := visible.PawnType.(*pb.SceneVisible_Player); ok {
 		if len(sd.Admitted) > 0 {
 			for _, player := range sd.Admitted {
-				if player.Id != pawnId {
+				if player.Id != id {
 					continue
 				}
 				if player.Entered {
 					handler(util.NewErr(util.EcServiceErr, util.M{
-						"player id": pawnId,
+						"player id": id,
 						"error":     "entry",
 					}))
 					return
 				}
 				player.Entered = true
-				s.entry(tid, pawn)
+				s.entry(tid, id, visible)
 				return
 			}
 			handler(util.NewErr(EcSceneEntry_NoEntry, nil))
 			return
 		}
 	}
-	_, ok := s.Scene().GetEntity(pawnId)
+	_, ok := s.Scene().GetEntity(id)
 	if ok {
 		handler(util.NewErr(util.EcServiceErr, util.M{
-			"player id": pawnId,
+			"player id": id,
 			"error":     "entry",
 		}))
 		return
 	}
-	s.entry(tid, pawn)
+	s.entry(tid, id, visible)
 	handler(nil)
 }
 
-func (s *SEntity) entry(tid int64, pawn *pb.ScenePawn) {
-	pawnId := pawn.Pawn.PawnId
-	e := ecs.NewEntity(pawnId)
+func (s *SEntity) entry(tid int64, id string, visible *pb.SceneVisible) {
+	e := ecs.NewEntity(id)
 	tile := NewCTile()
 	e.AddComponents(
-		NewCBehaviour(),
-		NewCTransform(pawn.Pawn.Position),
+		NewCTransform(visible.Position),
 		tile,
 	)
 	var cpawn ICPawn
-	switch p := pawn.Pawn.PawnType.(type) {
-	case *pb.ScenePawnEvt_Player:
-		cpawn = NewCPlayer(pawn.PlayerGateNodeId, pawn.PlayerGateAddr, p.Player, s.Frame())
-	case *pb.ScenePawnEvt_Monster:
+	switch p := visible.PawnType.(type) {
+	case *pb.SceneVisible_Player:
+		cpawn = NewCPlayer(visible.GateNodeId, visible.GateAddr, p.Player, s.Frame())
+	case *pb.SceneVisible_Monster:
 		cpawn = NewCMonster(p.Monster)
 	}
 

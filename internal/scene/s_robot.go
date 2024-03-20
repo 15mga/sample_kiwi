@@ -84,14 +84,11 @@ func (s *SRobot) onRobotAdd(data []any) {
 		e := ecs.NewEntity(pawnId)
 		var pos pb.Vector2
 		s.sysTile.GenRandPos(&pos)
-		//pos.X = rand.Float32() * 200
-		//pos.Y = rand.Float32() * 200
 		cpawn := NewCMonster(&pb.SceneMonster{
 			TplId: randMonsterTplId(),
 		})
 		tile := NewCTile()
 		e.AddComponents(
-			NewCBehaviour(),
 			NewCTransform(&pos),
 			tile,
 			NewCRobot(),

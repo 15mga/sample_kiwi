@@ -10,10 +10,10 @@ import (
 
 func (s *svc) bindReqToRes() {
 	kiwi.Codec().BindReqToRes(common.Scene, SceneEntryReq, SceneEntryRes)
-	kiwi.Codec().BindReqToRes(common.Scene, SceneMovementReq, SceneMovementRes)
-	kiwi.Codec().BindReqToRes(common.Scene, SceneBehaviourReq, SceneBehaviourRes)
 	kiwi.Codec().BindReqToRes(common.Scene, SceneRobotAddReq, SceneRobotAddRes)
 	kiwi.Codec().BindReqToRes(common.Scene, SceneRobotClearReq, SceneRobotClearRes)
+	kiwi.Codec().BindReqToRes(common.Scene, SceneMovementReq, SceneMovementRes)
+	kiwi.Codec().BindReqToRes(common.Scene, SceneSkillReq, SceneSkillRes)
 	kiwi.Codec().BindReqToRes(common.Scene, NewSceneReq, NewSceneRes)
 	kiwi.Codec().BindReqToRes(common.Scene, DisposeSceneReq, DisposeSceneRes)
 	kiwi.Codec().BindReqToRes(common.Scene, SceneGetReq, SceneGetRes)

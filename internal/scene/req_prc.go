@@ -13,17 +13,17 @@ func (s *svc) registerReq() {
 	kiwi.Router().BindReq(common.Scene, SceneEntryReq, func(req kiwi.IRcvRequest) {
 		core.SharePrcReq[*pb.SceneEntryReq](req, common.SScene, _svc.OnSceneEntry)
 	})
-	kiwi.Router().BindReq(common.Scene, SceneMovementReq, func(req kiwi.IRcvRequest) {
-		core.SharePrcReq[*pb.SceneMovementReq](req, common.SScene, _svc.OnSceneMovement)
-	})
-	kiwi.Router().BindReq(common.Scene, SceneBehaviourReq, func(req kiwi.IRcvRequest) {
-		core.SharePrcReq[*pb.SceneBehaviourReq](req, common.SScene, _svc.OnSceneBehaviour)
-	})
 	kiwi.Router().BindReq(common.Scene, SceneRobotAddReq, func(req kiwi.IRcvRequest) {
 		core.SharePrcReq[*pb.SceneRobotAddReq](req, common.SScene, _svc.OnSceneRobotAdd)
 	})
 	kiwi.Router().BindReq(common.Scene, SceneRobotClearReq, func(req kiwi.IRcvRequest) {
 		core.SharePrcReq[*pb.SceneRobotClearReq](req, common.SScene, _svc.OnSceneRobotClear)
+	})
+	kiwi.Router().BindReq(common.Scene, SceneMovementReq, func(req kiwi.IRcvRequest) {
+		core.SharePrcReq[*pb.SceneMovementReq](req, common.SScene, _svc.OnSceneMovement)
+	})
+	kiwi.Router().BindReq(common.Scene, SceneSkillReq, func(req kiwi.IRcvRequest) {
+		core.SharePrcReq[*pb.SceneSkillReq](req, common.SScene, _svc.OnSceneSkill)
 	})
 	kiwi.Router().BindReq(common.Scene, NewSceneReq, func(req kiwi.IRcvRequest) {
 		core.SharePrcReq[*pb.NewSceneReq](req, common.SScene, _svc.OnNewScene)

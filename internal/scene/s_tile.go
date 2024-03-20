@@ -24,17 +24,15 @@ func NewTile(x, y int) *Tile {
 			X: x,
 			Y: y,
 		},
-		interest:        ds.NewArray[util.Vec2Int](8),
-		visibleEvents:   ds.NewArray[*pb.ScenePawnEvt](8),
-		invisibleEvents: ds.NewArray[string](8),
-		movementEvents:  ds.NewArray[*pb.SceneMovementEvt](64),
-		behaviourEvents: ds.NewArray[*pb.SceneBehaviourEvt](16),
-		stayInvisibleEvents: ds.NewKSet[string, string](64, func(s string) string {
-			return s
+		interest: ds.NewArray[util.Vec2Int](8),
+		events:   ds.NewArray[*pb.SceneEvent](8),
+		stayInvisibleEvents: ds.NewKSet[string, *pb.SceneEvent](8, func(event *pb.SceneEvent) string {
+			return event.Id
 		}),
-		stayVisibleEvents: ds.NewKSet[string, *pb.ScenePawnEvt](64, func(evt *pb.ScenePawnEvt) string {
-			return evt.PawnId
+		stayVisibleEvents: ds.NewKSet[string, *pb.SceneEvent](8, func(event *pb.SceneEvent) string {
+			return event.Id
 		}),
+		stayDelCache: ds.NewArray[*CTile](8),
 		cTiles: ds.NewKSet[string, *CTile](64, func(tile *CTile) string {
 			return tile.Entity().Id()
 		}),
@@ -47,42 +45,29 @@ type Tile struct {
 	tag                 string
 	id                  util.Vec2Int
 	interest            *ds.Array[util.Vec2Int]
-	visibleEvents       *ds.Array[*pb.ScenePawnEvt]
-	invisibleEvents     *ds.Array[string]
-	movementEvents      *ds.Array[*pb.SceneMovementEvt]
-	behaviourEvents     *ds.Array[*pb.SceneBehaviourEvt]
-	stayInvisibleEvents *ds.KSet[string, string]
-	stayVisibleEvents   *ds.KSet[string, *pb.ScenePawnEvt]
+	events              *ds.Array[*pb.SceneEvent]
+	stayInvisibleEvents *ds.KSet[string, *pb.SceneEvent]
+	stayVisibleEvents   *ds.KSet[string, *pb.SceneEvent]
+	stayDelCache        *ds.Array[*CTile]
 	cTiles              *ds.KSet[string, *CTile]
 }
 
-func (t *Tile) PushMovement(movement *pb.SceneMovementEvt) {
-	t.movementEvents.Add(movement)
+func (t *Tile) AddCTile(ct *CTile) {
+	_ = t.cTiles.AddNX(ct)
 }
 
-func (t *Tile) PushBehaviour(behaviour *pb.SceneBehaviourEvt) {
-	t.behaviourEvents.Add(behaviour)
-}
-
-func (t *Tile) AddCTile(cTile *CTile) {
-	_ = t.cTiles.Add(cTile)
-	_ = t.stayInvisibleEvents.Add(cTile.cEvent.invisible)
-	_ = t.stayVisibleEvents.Add(cTile.cEvent.visible)
-	t.visibleEvents.Add(cTile.cEvent.visible)
-}
-
-func (t *Tile) DelCTile(cTile *CTile) {
-	t.cTiles.Del(cTile.Entity().Id())
-	t.stayInvisibleEvents.Del(cTile.cEvent.invisible)
-	t.stayVisibleEvents.Del(cTile.cEvent.visible.PawnId)
-	t.invisibleEvents.Add(cTile.cEvent.invisible)
+func (t *Tile) CacheDelCTile(ct ...*CTile) {
+	t.stayDelCache.AddRange(ct...)
 }
 
 func (t *Tile) Clean() {
-	t.visibleEvents.Reset()
-	t.invisibleEvents.Reset()
-	t.movementEvents.Reset()
-	t.behaviourEvents.Reset()
+	for _, ct := range t.stayDelCache.Values() {
+		t.stayInvisibleEvents.Del(ct.cEvent.invisible.Id)
+		t.stayVisibleEvents.Del(ct.cEvent.visible.Id)
+		t.cTiles.Del(ct.Entity().Id())
+	}
+	t.events.Reset()
+	t.stayDelCache.Reset()
 }
 
 func NewSTile(tileSize, sceneWidth, sceneHeight, fovLaps int) *STile {
@@ -131,7 +116,6 @@ func (s *STile) OnUpdate() {
 	s.processSceneEntry()
 	s.processSceneExit()
 	s.processEvents()
-	s.FrameAfter().Push(s.CleanTiles)
 }
 
 func (s *STile) processSceneExit() {
@@ -153,87 +137,115 @@ func (s *STile) processSceneEntry() {
 	}
 
 	for _, component := range components {
-		tile := component.(*CTile)
-		s.getTile(tile.currTile).AddCTile(tile)
+		ct := component.(*CTile)
+		s.getTile(ct.currTile).AddCTile(ct)
 	}
 }
 
 func (s *STile) processEvents() {
-	s.PTagComponentsToFnLink(string(C_Tile), func(component ecs.IComponent, link *ds.FnLink) {
-		ct := component.(*CTile)
-		if !ct.cTnf.IsMoved() {
-			return
-		}
-		t := s.posToTile(ct.cTnf.position)
-		ct.UpdateTile(t)
-		if !ct.IsTileChanged() {
-			return
-		}
-		s.getInterestTileChanged(ct)
-		link.Push(func() {
-			s.getTile(ct.currTile).AddCTile(ct)
-		})
-	})
-	//添加事件到格子
-	worker.P[*Tile](s.tiles.Values(), func(tile *Tile) {
-		if tile.cTiles.Count() == 0 {
-			return
-		}
-		var delTiles []*CTile
-		for _, ct := range tile.cTiles.Values() {
-			switch ct.state {
-			case TileStateEntry:
-				tile.AddCTile(ct)
-				ct.state = TileStateStay
-			case TileStateExit:
-				delTiles = append(delTiles, ct)
-			case TileStateStay:
-				if ct.cTnf.IsMoved() {
-					tile.movementEvents.Add(ct.cEvent.movement)
-				}
-				if ct.IsTileChanged() {
-					if ct.prevTile.Equal(tile.id) {
-						delTiles = append(delTiles, ct)
-					}
-				}
-			}
-		}
-		for _, ct := range delTiles {
-			tile.DelCTile(ct)
-		}
-	})
+	//components, ok := s.PTagComponentsToFnLink(string(C_Tile), func(component ecs.IComponent, link *ds.FnLink) {
+	//	ct := component.(*CTile)
+	//	if !ct.cTnf.IsMoved() {
+	//		return
+	//	}
+	//	t := s.posToTile(ct.cTnf.position)
+	//	ct.UpdateTile(t)
+	//	if !ct.IsTileChanged() {
+	//		return
+	//	}
+	//	s.getInterestTileChanged(ct)
+	//	link.Push(func() {
+	//		s.getTile(ct.currTile).AddCTile(ct)
+	//	})
+	//})
 	components, ok := s.Scene().GetTagComponents(string(C_Tile))
 	if !ok {
 		return
 	}
 	worker.PFilter[ecs.IComponent, *CTile](components, func(component ecs.IComponent) (*CTile, bool) {
 		ct := component.(*CTile)
+		if !ct.cTnf.IsMoved() {
+			return nil, false
+		}
+		t := s.posToTile(ct.cTnf.position)
+		ct.UpdateTile(t)
+		if !ct.IsTileChanged() {
+			return nil, false
+		}
+		s.getInterestTileChanged(ct)
+		return ct, true
+	}, func(cTiles []*CTile) {
+		for _, ct := range cTiles {
+			s.getTile(ct.currTile).AddCTile(ct)
+		}
+	})
+	//添加事件到格子
+	//now := s.Frame().NowMillSecs()
+	worker.P[*Tile](s.tiles.Values(), func(tile *Tile) {
+		if tile.cTiles.Count() == 0 {
+			return
+		}
+		//for _, event := range tile.stayInvisibleEvents.Values() {
+		//	event.Event.(*pb.SceneEvent_Invisible).Invisible.Timestamp = now
+		//}
+		//for _, event := range tile.stayVisibleEvents.Values() {
+		//	event.Event.(*pb.SceneEvent_Visible).Visible.Timestamp = now
+		//}
+		var delCTiles []*CTile
+		for _, ct := range tile.cTiles.Values() {
+			switch ct.state {
+			case TileStateExit:
+				delCTiles = append(delCTiles, ct)
+				tile.events.Add(ct.cEvent.invisible)
+			case TileStateEntry:
+				_ = tile.stayInvisibleEvents.AddNX(ct.cEvent.invisible)
+				_ = tile.stayVisibleEvents.AddNX(ct.cEvent.visible)
+				tile.events.Add(ct.cEvent.visible)
+			case TileStateStay:
+				if !ct.cTnf.IsMoved() {
+					continue
+				}
+				tile.events.AddRange(ct.cTnf.movementEvents.Values()...)
+				if !ct.IsTileChanged() {
+					continue
+				}
+				if ct.prevTile.Equal(tile.id) {
+					delCTiles = append(delCTiles, ct)
+					tile.events.Add(ct.cEvent.invisible)
+				} else if ct.currTile.Equal(tile.id) {
+					_ = tile.stayInvisibleEvents.AddNX(ct.cEvent.invisible)
+					_ = tile.stayVisibleEvents.AddNX(ct.cEvent.visible)
+					tile.events.Add(ct.cEvent.visible)
+				}
+			}
+		}
+		tile.CacheDelCTile(delCTiles...)
+	})
+	worker.P[ecs.IComponent](components, func(component ecs.IComponent) {
+		ct := component.(*CTile)
 		switch ct.state {
-		case TileStateExit:
-			return ct, true
 		case TileStateEntry:
 			for _, id := range ct.interest.Values() {
 				tile := s.getTile(id)
-				ct.cEvent.PushVisible(tile.visibleEvents.Values())
-				ct.cEvent.PushMovement(tile.movementEvents.Values())
+				//todo 这里新进入的会重复给了visible事件，如果不希望重复给，把stayVisible放在后面处理
+				ct.cEvent.PushEvents(tile.stayVisibleEvents.Values())
+				ct.cEvent.PushEvents(tile.events.Values())
 			}
+			ct.state = TileStateStay
 		case TileStateStay:
 			if ct.IsTileChanged() {
-				for _, id := range ct.exit.Values() {
-					tile := s.getTile(id)
-					ct.cEvent.PushInvisible(tile.stayInvisibleEvents.Values())
-				}
 				for _, id := range ct.entry.Values() {
 					tile := s.getTile(id)
-					ct.cEvent.PushVisible(tile.visibleEvents.Values())
-					ct.cEvent.PushVisible(tile.stayVisibleEvents.Values())
-					ct.cEvent.PushMovement(tile.movementEvents.Values())
+					ct.cEvent.PushEvents(tile.stayVisibleEvents.Values())
+					ct.cEvent.PushEvents(tile.events.Values())
 				}
 				for _, id := range ct.stay.Values() {
 					tile := s.getTile(id)
-					ct.cEvent.PushInvisible(tile.invisibleEvents.Values())
-					ct.cEvent.PushVisible(tile.visibleEvents.Values())
-					ct.cEvent.PushMovement(tile.movementEvents.Values())
+					ct.cEvent.PushEvents(tile.events.Values())
+				}
+				for _, id := range ct.exit.Values() {
+					tile := s.getTile(id)
+					ct.cEvent.PushEvents(tile.stayInvisibleEvents.Values())
 				}
 				ct.interest.Clean()
 				s.GetInterestTiles(ct.currTile, ct.interest)
@@ -241,24 +253,23 @@ func (s *STile) processEvents() {
 			} else {
 				for _, id := range ct.interest.Values() {
 					tile := s.getTile(id)
-					ct.cEvent.PushInvisible(tile.invisibleEvents.Values())
-					ct.cEvent.PushVisible(tile.visibleEvents.Values())
-					ct.cEvent.PushMovement(tile.movementEvents.Values())
+					//for _, event := range tile.events.Values() {
+					//	switch event.Event.(type) {
+					//	case *pb.SceneEvent_Visible:
+					//		kiwi.Debug("test", nil)
+					//	}
+					//}
+					ct.cEvent.PushEvents(tile.events.Values())
 				}
 			}
 		}
-		return nil, false
-	}, func(cTiles []*CTile) {
-		for _, cTile := range cTiles {
-			s.getTile(cTile.currTile).DelCTile(cTile)
-		}
 	})
-}
-
-func (s *STile) CleanTiles() {
-	worker.P[*Tile](s.tiles.Values(), func(tile *Tile) {
+	for _, tile := range s.tiles.Values() {
 		tile.Clean()
-	})
+	}
+	//worker.P[*Tile](s.tiles.Values(), func(tile *Tile) {
+	//	tile.Clean()
+	//})
 }
 
 func (s *STile) GetInterestTiles(center util.Vec2Int, arr *ds.Array[util.Vec2Int]) {

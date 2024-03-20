@@ -12,7 +12,7 @@ func NewCTransform(pos *pb.Vector2) *CTransform {
 	c := &CTransform{
 		Component: ecs.NewComponent(C_Transform),
 		position:  pos,
-		movements: ds.NewRing[*pb.SceneMovementReq](
+		movementReqs: ds.NewRing[*pb.SceneMovementReq](
 			ds.RingMinCap[*pb.SceneMovementReq](4),
 			ds.RingMaxCap[*pb.SceneMovementReq](64),
 		),
@@ -22,17 +22,15 @@ func NewCTransform(pos *pb.Vector2) *CTransform {
 
 type CTransform struct {
 	ecs.Component
-	position     *pb.Vector2
-	movements    *ds.Ring[*pb.SceneMovementReq]
-	lastMovement *pb.SceneMovementReq
-	movementEvt  *pb.SceneMovementEvt
-	moved        bool
+	position       *pb.Vector2
+	movementReqs   *ds.Ring[*pb.SceneMovementReq]
+	lastMovement   *pb.SceneMovementReq
+	movementEvents *ds.Array[*pb.SceneEvent]
+	moved          bool
 }
 
 func (c *CTransform) Start() {
-	c.movementEvt = &pb.SceneMovementEvt{
-		PawnId: c.Entity().Id(),
-	}
+	c.movementEvents = ds.NewArray[*pb.SceneEvent](8)
 	c.lastMovement = &pb.SceneMovementReq{
 		Direction: &pb.Vector2{
 			X: 1,
@@ -50,13 +48,13 @@ func (c *CTransform) IsMoved() bool {
 
 func (c *CTransform) PushMovement(movement *pb.SceneMovementReq) {
 	movement.Timestamp = time.Now().UnixMilli()
-	_ = c.movements.Put(movement)
+	_ = c.movementReqs.Put(movement)
 }
 
 func (c *CTransform) ProcessMovement(nowMs int64, maxX, maxY float32) {
-	if c.movements.Available() > 0 {
-		for c.movements.Available() > 0 {
-			movement, _ := c.movements.Pop()
+	if c.movementReqs.Available() > 0 {
+		for c.movementReqs.Available() > 0 {
+			movement, _ := c.movementReqs.Pop()
 			if !isStopMove(c.lastMovement) {
 				c.updatePosition(movement.Timestamp-c.lastMovement.Timestamp, c.lastMovement, maxX, maxY)
 				c.moved = true
@@ -75,7 +73,7 @@ func (c *CTransform) ProcessMovement(nowMs int64, maxX, maxY float32) {
 }
 
 func (c *CTransform) Clean() {
-	c.movementEvt.Movement = nil
+	c.movementEvents.Reset()
 }
 
 func isStopMove(movement *pb.SceneMovementReq) bool {
@@ -89,8 +87,14 @@ func (c *CTransform) updatePosition(durMs int64, movement *pb.SceneMovementReq, 
 	pos.X = util.ClampFloat(pos.X, 0, maxX)
 	pos.Y = util.ClampFloat(pos.Y, 0, maxY)
 	Vec2ToPbVec(pos, c.position)
-	c.movementEvt.Movement = append(c.movementEvt.Movement, &pb.SceneMovement{
-		Position: c.position,
-		Duration: durMs,
+	c.movementEvents.Add(&pb.SceneEvent{
+		Id: c.Entity().Id(),
+		Event: &pb.SceneEvent_Movement{
+			Movement: &pb.SceneMovement{
+				Position:  c.position,
+				Timestamp: movement.Timestamp,
+				Duration:  durMs,
+			},
+		},
 	})
 }
