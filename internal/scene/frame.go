@@ -32,8 +32,8 @@ type Conf struct {
 func getConf(scene *pb.Scene) *Conf {
 	return &Conf{
 		TileSize: 64,
-		Width:    4096,
-		Height:   4096,
+		Width:    2048,
+		Height:   2048,
 		FovLaps:  1,
 	}
 }

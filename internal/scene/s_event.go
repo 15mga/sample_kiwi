@@ -16,7 +16,7 @@ type SEvent struct {
 }
 
 func (s *SEvent) OnUpdate() {
-	s.PTagComponents(string(C_Event), s.prcEvent)
+	s.PTagComponents(string(C_Event), 128, s.prcEvent)
 }
 
 func (s *SEvent) prcEvent(component ecs.IComponent) {

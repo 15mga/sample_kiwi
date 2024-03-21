@@ -18,7 +18,7 @@ func (s *SMonster) OnBeforeStart() {
 }
 
 func (s *SMonster) OnUpdate() {
-	s.PTagComponents(string(C_Monster), func(component ecs.IComponent) {
+	s.PTagComponents(string(C_Monster), 128, func(component ecs.IComponent) {
 		component.(*CMonster).Update()
 	})
 }

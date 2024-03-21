@@ -24,7 +24,7 @@ type STransform struct {
 
 func (s *STransform) OnBeforeStart() {
 	s.System.OnBeforeStart()
-	s.BindPFnJob(JobMovement, s.onMovement)
+	s.BindPFnJob(JobMovement, 128, s.onMovement)
 }
 
 func (s *STransform) OnUpdate() {
@@ -33,7 +33,7 @@ func (s *STransform) OnUpdate() {
 
 	//清理工作
 	s.FrameAfter().Push(func() {
-		s.PTagComponents(TagCompMove, func(component ecs.IComponent) {
+		s.PTagComponents(TagCompMove, 128, func(component ecs.IComponent) {
 			component.(*CTransform).Clean()
 		})
 	})
@@ -56,7 +56,7 @@ func (s *STransform) onMovement(link *ds.FnLink, data []any) {
 }
 
 func (s *STransform) processMove() {
-	_, _ = s.PTagComponents(TagCompMove, func(component ecs.IComponent) {
+	_, _ = s.PTagComponents(TagCompMove, 64, func(component ecs.IComponent) {
 		tnf := component.(*CTransform)
 		tnf.ProcessMovement(s.Frame().NowMillSecs(), s.sceneWidth, s.sceneHeight)
 	})

@@ -119,14 +119,14 @@ func (s *STile) OnUpdate() {
 }
 
 func (s *STile) processSceneExit() {
-	_, _ = s.PTagComponents(TagCompSceneExit, func(component ecs.IComponent) {
+	_, _ = s.PTagComponents(TagCompSceneExit, 128, func(component ecs.IComponent) {
 		tile := component.(*CTile)
 		tile.state = TileStateExit
 	})
 }
 
 func (s *STile) processSceneEntry() {
-	components, ok := s.PTagComponents(TagCompSceneEntry, func(component ecs.IComponent) {
+	components, ok := s.PTagComponents(TagCompSceneEntry, 64, func(component ecs.IComponent) {
 		tile := component.(*CTile)
 		tile.state = TileStateEntry
 		tile.InitTile(s.posToTile(tile.cTnf.position))
@@ -143,26 +143,7 @@ func (s *STile) processSceneEntry() {
 }
 
 func (s *STile) processEvents() {
-	//components, ok := s.PTagComponentsToFnLink(string(C_Tile), func(component ecs.IComponent, link *ds.FnLink) {
-	//	ct := component.(*CTile)
-	//	if !ct.cTnf.IsMoved() {
-	//		return
-	//	}
-	//	t := s.posToTile(ct.cTnf.position)
-	//	ct.UpdateTile(t)
-	//	if !ct.IsTileChanged() {
-	//		return
-	//	}
-	//	s.getInterestTileChanged(ct)
-	//	link.Push(func() {
-	//		s.getTile(ct.currTile).AddCTile(ct)
-	//	})
-	//})
-	components, ok := s.Scene().GetTagComponents(string(C_Tile))
-	if !ok {
-		return
-	}
-	worker.PFilter[ecs.IComponent, *CTile](components, func(component ecs.IComponent) (*CTile, bool) {
+	components, ok := ecs.PFilter[*CTile](s, string(C_Tile), 128, func(component ecs.IComponent) (*CTile, bool) {
 		ct := component.(*CTile)
 		if !ct.cTnf.IsMoved() {
 			return nil, false
@@ -179,18 +160,14 @@ func (s *STile) processEvents() {
 			s.getTile(ct.currTile).AddCTile(ct)
 		}
 	})
+	if !ok {
+		return
+	}
 	//添加事件到格子
-	//now := s.Frame().NowMillSecs()
-	worker.P[*Tile](s.tiles.Values(), func(tile *Tile) {
+	worker.P[*Tile](64, s.tiles.Values(), func(tile *Tile) {
 		if tile.cTiles.Count() == 0 {
 			return
 		}
-		//for _, event := range tile.stayInvisibleEvents.Values() {
-		//	event.Event.(*pb.SceneEvent_Invisible).Invisible.Timestamp = now
-		//}
-		//for _, event := range tile.stayVisibleEvents.Values() {
-		//	event.Event.(*pb.SceneEvent_Visible).Visible.Timestamp = now
-		//}
 		var delCTiles []*CTile
 		for _, ct := range tile.cTiles.Values() {
 			switch ct.state {
@@ -221,13 +198,13 @@ func (s *STile) processEvents() {
 		}
 		tile.CacheDelCTile(delCTiles...)
 	})
-	worker.P[ecs.IComponent](components, func(component ecs.IComponent) {
+	worker.P[ecs.IComponent](128, components, func(component ecs.IComponent) {
 		ct := component.(*CTile)
 		switch ct.state {
 		case TileStateEntry:
 			for _, id := range ct.interest.Values() {
 				tile := s.getTile(id)
-				//todo 这里新进入的会重复给了visible事件，如果不希望重复给，把stayVisible放在后面处理
+				//todo 这里新进入的会重复给了visible事件，如果不希望重复给，把stayVisible放在事件广播后面处理,但需要多一次处理
 				ct.cEvent.PushEvents(tile.stayVisibleEvents.Values())
 				ct.cEvent.PushEvents(tile.events.Values())
 			}
@@ -253,23 +230,14 @@ func (s *STile) processEvents() {
 			} else {
 				for _, id := range ct.interest.Values() {
 					tile := s.getTile(id)
-					//for _, event := range tile.events.Values() {
-					//	switch event.Event.(type) {
-					//	case *pb.SceneEvent_Visible:
-					//		kiwi.Debug("test", nil)
-					//	}
-					//}
 					ct.cEvent.PushEvents(tile.events.Values())
 				}
 			}
 		}
 	})
-	for _, tile := range s.tiles.Values() {
+	worker.P[*Tile](64, s.tiles.Values(), func(tile *Tile) {
 		tile.Clean()
-	}
-	//worker.P[*Tile](s.tiles.Values(), func(tile *Tile) {
-	//	tile.Clean()
-	//})
+	})
 }
 
 func (s *STile) GetInterestTiles(center util.Vec2Int, arr *ds.Array[util.Vec2Int]) {

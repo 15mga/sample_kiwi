@@ -6,7 +6,6 @@ import (
 	"github.com/15mga/kiwi/ecs"
 	"github.com/15mga/kiwi/sid"
 	"github.com/15mga/kiwi/util"
-	"github.com/15mga/kiwi/worker"
 	"math/rand"
 )
 
@@ -116,11 +115,7 @@ func (s *SRobot) onRobotClear(data []any) {
 }
 
 func (s *SRobot) updateRobot() {
-	components, ok := s.Scene().GetTagComponents(string(C_Robot))
-	if !ok {
-		return
-	}
-	worker.PToLink[ecs.IComponent, ecs.IComponent](components, func(component ecs.IComponent, d *ds.Link[ecs.IComponent]) {
+	ecs.PToLink[ecs.IComponent](s, string(C_Robot), 128, func(component ecs.IComponent, d *ds.Link[ecs.IComponent]) {
 		if component.(*CRobot).Update(s.Frame().DeltaMillSec()) {
 			d.Push(component)
 		}

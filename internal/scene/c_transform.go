@@ -10,12 +10,9 @@ import (
 
 func NewCTransform(pos *pb.Vector2) *CTransform {
 	c := &CTransform{
-		Component: ecs.NewComponent(C_Transform),
-		position:  pos,
-		movementReqs: ds.NewRing[*pb.SceneMovementReq](
-			ds.RingMinCap[*pb.SceneMovementReq](4),
-			ds.RingMaxCap[*pb.SceneMovementReq](64),
-		),
+		Component:    ecs.NewComponent(C_Transform),
+		position:     pos,
+		movementReqs: ds.NewArray[*pb.SceneMovementReq](4),
 	}
 	return c
 }
@@ -23,7 +20,7 @@ func NewCTransform(pos *pb.Vector2) *CTransform {
 type CTransform struct {
 	ecs.Component
 	position       *pb.Vector2
-	movementReqs   *ds.Ring[*pb.SceneMovementReq]
+	movementReqs   *ds.Array[*pb.SceneMovementReq]
 	lastMovement   *pb.SceneMovementReq
 	movementEvents *ds.Array[*pb.SceneEvent]
 	moved          bool
@@ -48,19 +45,19 @@ func (c *CTransform) IsMoved() bool {
 
 func (c *CTransform) PushMovement(movement *pb.SceneMovementReq) {
 	movement.Timestamp = time.Now().UnixMilli()
-	_ = c.movementReqs.Put(movement)
+	c.movementReqs.Add(movement)
 }
 
 func (c *CTransform) ProcessMovement(nowMs int64, maxX, maxY float32) {
-	if c.movementReqs.Available() > 0 {
-		for c.movementReqs.Available() > 0 {
-			movement, _ := c.movementReqs.Pop()
+	if c.movementReqs.Count() > 0 {
+		for _, movement := range c.movementReqs.Values() {
 			if !isStopMove(c.lastMovement) {
 				c.updatePosition(movement.Timestamp-c.lastMovement.Timestamp, c.lastMovement, maxX, maxY)
 				c.moved = true
 			}
 			c.lastMovement = movement
 		}
+		c.movementReqs.Clean()
 	} else {
 		if isStopMove(c.lastMovement) {
 			c.moved = false
