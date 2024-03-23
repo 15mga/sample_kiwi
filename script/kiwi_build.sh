@@ -12,6 +12,7 @@ echo $KIWIDIR
 
 echo complie kiwi
 
+#  --kiwi_out=-m=$NAME,-r=guest_player,-c=cs,-db=mgo:$KIWIOUTDIR \
 protoc \
   --proto_path=$GOOGLEPBIDR \
   --proto_path=$KIWIDIR \

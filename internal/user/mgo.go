@@ -28,7 +28,7 @@ func UserIdx() []mongo.IndexModel {
 	return []mongo.IndexModel{
 		{
 			Keys: bson.D{
-				{"ban", 1},
+				{"mobile", 1},
 			},
 			Options: options.Index().
 				SetUnique(true),

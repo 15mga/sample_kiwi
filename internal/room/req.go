@@ -313,8 +313,12 @@ func (s *Svc) OnRoomReady(pkt kiwi.IRcvRequest, req *pb.RoomReadyReq, res *pb.Ro
 	}
 	pid := pkt.HeadId()
 	ok = false
-	for playerId := range room.Players {
+	for playerId, p := range room.Players {
 		if playerId == pid {
+			if p.Ready == req.IsReady {
+				pkt.Ok(res)
+				return
+			}
 			ok = true
 			break
 		}
